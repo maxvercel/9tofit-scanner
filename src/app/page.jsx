@@ -586,41 +586,15 @@ Priority: Pain overrides all. Sleep overrides Stress and Energy.`;
 
 Analyze and return JSON response.`;
 
-    const doFetch = async () => {
-      const r = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }]
-        })
-      });
-      return { status: r.status, rawText: await r.text() };
-    };
-
     try {
-      let attempt = 0, status, rawText;
-      while (attempt < 3) {
-        ({ status, rawText } = await doFetch());
-        if (status === 529 || status === 429) {
-          attempt++;
-          const waitSec = attempt * 4;
-          setError(`API overbelast — opnieuw in ${waitSec}s... (poging ${attempt}/3)`);
-          await new Promise(res => setTimeout(res, waitSec * 1000));
-          setError(null);
-        } else { break; }
-      }
-      if (status !== 200) {
-        let errMsg = `HTTP ${status}`;
-        try { errMsg += ": " + JSON.parse(rawText)?.error?.message; } catch {}
-        throw new Error(errMsg);
-      }
-      const data = JSON.parse(rawText);
-      const text = data.content?.map(c => c.text || "").join("") || "";
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error("Geen JSON in response");
-      const parsed = JSON.parse(jsonMatch[0]);
+      const response = await fetch('/api/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values, painLocations })
+      });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Scan mislukt');
+      const parsed = data.result;
       setResult(parsed);
 
       // Send emails via Resend
