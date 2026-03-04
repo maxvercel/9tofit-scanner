@@ -437,7 +437,24 @@ const STYLES = `
     justify-content: space-between;
   }
   .footer-text { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; color: var(--border); text-transform: uppercase; }
+
+  /* INTRO FORM */
+  .intro-panel { background: var(--carbon); border: 1px solid var(--border); padding: 36px; }
+  .intro-title { font-family: 'Bebas Neue', cursive; font-size: 38px; letter-spacing: 4px; color: var(--text); margin-bottom: 8px; line-height: 1; }
+  .intro-desc { font-size: 13px; color: var(--muted); margin-bottom: 32px; font-weight: 300; letter-spacing: 0.3px; }
+  .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  @media (max-width: 600px) { .field-group { grid-template-columns: 1fr; } }
+  .field-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; display: block; }
+  .field-input { width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 12px 16px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+  .field-input:focus { border-color: var(--green); }
+  .field-input::placeholder { color: var(--muted); }
+  .start-btn { width: 100%; padding: 18px; background: var(--green); color: var(--black); border: none; font-family: 'Bebas Neue', cursive; font-size: 22px; letter-spacing: 5px; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+  .start-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .start-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .email-sending { text-align: center; padding: 16px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--green); text-transform: uppercase; }
+  .email-success { text-align: center; padding: 12px; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 2px; color: var(--green); border: 1px solid var(--green); background: rgba(0,232,122,0.06); text-transform: uppercase; margin-top: 16px; }
 `;
+
 
 const PAIN_LOCATIONS = ["Lower Back", "Knee", "Shoulder", "Hip", "Neck", "Ankle", "Wrist", "Upper Back"];
 
@@ -505,11 +522,15 @@ function SliderInput({ name, label, min, max, value, onChange }) {
 }
 
 export default function App() {
+  const [userInfo, setUserInfo] = useState({ name: '', email: '' });
+  const [scanStarted, setScanStarted] = useState(false);
   const [values, setValues] = useState({ sleep: 7, energy: 7, stress: 4, pain: 2 });
   const [painLocations, setPainLocations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
 
   const togglePainLocation = (loc) => {
     setPainLocations(prev =>
@@ -601,6 +622,26 @@ Analyze and return JSON response.`;
       if (!jsonMatch) throw new Error("Geen JSON in response");
       const parsed = JSON.parse(jsonMatch[0]);
       setResult(parsed);
+
+      // Send emails via Resend
+      setEmailSending(true);
+      try {
+        await fetch('/api/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: userInfo.name,
+            email: userInfo.email,
+            result: parsed,
+            values
+          })
+        });
+        setEmailSent(true);
+      } catch (e) {
+        console.error('Email failed:', e);
+      } finally {
+        setEmailSending(false);
+      }
     } catch (err) {
       setError(`Scan mislukt: ${err.message}`);
     } finally {
@@ -624,7 +665,42 @@ Analyze and return JSON response.`;
         </header>
 
         <main className="main">
-          {!result ? (
+          {!scanStarted ? (
+            <div className="intro-panel">
+              <div className="section-label">Get Started</div>
+              <div className="intro-title">DAILY READINESS SCAN</div>
+              <div className="intro-desc">Enter your details to receive your personalized performance report by email.</div>
+              <div className="field-group">
+                <div>
+                  <label className="field-label">First Name</label>
+                  <input
+                    className="field-input"
+                    type="text"
+                    placeholder="John"
+                    value={userInfo.name}
+                    onChange={e => setUserInfo(p => ({ ...p, name: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Email Address</label>
+                  <input
+                    className="field-input"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={userInfo.email}
+                    onChange={e => setUserInfo(p => ({ ...p, email: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <button
+                className="start-btn"
+                onClick={() => setScanStarted(true)}
+                disabled={!userInfo.name || !userInfo.email || !userInfo.email.includes('@')}
+              >
+                START SCAN →
+              </button>
+            </div>
+          ) : !result ? (
             <div className="scan-panel">
               <div className="section-label">Daily Input</div>
               <div className="scan-title">READINESS SCAN</div>
@@ -740,7 +816,9 @@ Analyze and return JSON response.`;
 
               {/* SCAN AGAIN */}
               <div style={{ padding: "20px 36px 28px" }}>
-                <button className="scan-again-btn" onClick={() => { setResult(null); setError(null); }}>
+                {emailSending && <div className="email-sending">✉ Sending your report...</div>}
+                {emailSent && <div className="email-success">✓ Report sent to {userInfo.email}</div>}
+                <button className="scan-again-btn" style={{ marginTop: emailSent || emailSending ? 16 : 0 }} onClick={() => { setResult(null); setError(null); setEmailSent(false); setScanStarted(false); setUserInfo({ name: '', email: '' }); }}>
                   ← New Scan
                 </button>
               </div>
