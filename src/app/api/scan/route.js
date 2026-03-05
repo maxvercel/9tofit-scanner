@@ -1,49 +1,78 @@
 export async function POST(request) {
   try {
-    const { values, painLocations } = await request.json();
+    const { type, answers, userInfo } = await request.json();
 
-    const systemPrompt = `You are the AI performance engine behind 9toFit Performance Intelligence™, a high-level coaching system for busy working men (30–55) who want sustainable strength and energy without burnout.
+    const systemPrompt = `You are Max, a specialist in injury rehabilitation and movement correction at 9toFit. You work with busy men (30–55) who have pain affecting their training and daily life.
 
-Your role:
-- Analyze daily readiness data
-- Generate intelligent training adjustments
-- Detect patterns over time
-- Provide performance risk scoring
+Based on the assessment answers, generate a detailed, expert movement analysis. Be specific, authoritative and genuinely helpful — this should feel like a real consultation, not a generic response.
 
-Tone: Direct, Professional, Performance-oriented, Data-driven, No fluff, No motivational clichés.
+You MUST return ONLY valid JSON with NO markdown, NO backticks, NO explanation outside the JSON.
 
-Decision Priority:
-1. Pain
-2. Sleep
-3. Stress
-4. Energy
-
-You must ALWAYS return ONLY valid JSON with NO markdown, NO backticks, NO explanation outside the JSON:
+Return this exact structure:
 {
-  "readiness_status": "Green | Orange | Red",
-  "readiness_score": 0-100,
-  "training_adjustment": "specific training adjustment string",
-  "recovery_focus": "recovery focus string",
-  "hydration_target_liters": "e.g. 2.5L",
-  "nervous_system_protocol": "protocol if stress is high, else Standard warm-up",
-  "mobility_focus": "specific mobility if pain exists, else General mobility",
-  "performance_risk_level": "Low | Moderate | High",
-  "coach_message": "direct coaching message under 60 words"
+  "headline": "Short impactful headline about their main issue (max 8 words, use *italic* around key phrase)",
+  "primary_area": "Main pain location in 1-3 words",
+  "overall_risk": "Low | Moderate | High",
+  "urgency": "Short urgency label e.g. 'Needs attention' or 'Monitor closely' or 'Act now'",
+  "movement_limitations": [
+    {
+      "icon": "relevant emoji",
+      "name": "Limitation name",
+      "description": "2-3 sentence explanation of why this limitation exists and how it impacts daily life and training"
+    }
+  ],
+  "risk_factors": [
+    "Risk factor 1 — specific explanation tied to their answers",
+    "Risk factor 2 — specific explanation",
+    "Risk factor 3 — specific explanation"
+  ],
+  "coach_insight": "2-3 sentences of direct, expert insight. Be specific to their situation. Reference their pain location, work type, and duration. End with one clear priority action.",
+  "seven_day_plan": [
+    {
+      "day": 1,
+      "title": "Foundation & Assessment",
+      "focus": "Mobility",
+      "exercises": [
+        {
+          "name": "Exercise name",
+          "sets": "3 sets",
+          "duration": "45 seconds",
+          "note": "How to perform it and what to feel"
+        }
+      ],
+      "note": "Optional day note or progression tip"
+    }
+  ]
 }
 
-Decision rules:
-Green: Sleep ≥7, Energy ≥7, Stress ≤5, Pain ≤3 → readiness_score 75–100
-Orange: Sleep 5–6, Energy 5–6, Stress 6–7, Pain 4–5 → readiness_score 45–74
-Red: Sleep ≤4, Energy ≤4, Stress ≥8, Pain ≥6 → readiness_score 0–44
-Priority: Pain overrides all. Sleep overrides Stress and Energy.`;
+Rules for the 7-day plan:
+- Day 1-2: Gentle mobility and pain reduction
+- Day 3-4: Stability and activation
+- Day 5-6: Strength and movement re-education
+- Day 7: Integration and assessment
+- 3-4 exercises per day
+- Each exercise must be specific to their pain location
+- Include sets/duration AND a coaching note for each exercise
+- Progress appropriately based on their training history and pain intensity
 
-    const userMessage = `Daily readiness check-in:
-- Sleep: ${values.sleep} hours
-- Energy: ${values.energy}/10
-- Stress: ${values.stress}/10
-- Pain: ${values.pain}/10${painLocations.length > 0 ? ` (Location: ${painLocations.join(', ')})` : ''}
+Rules for risk assessment:
+- High risk: pain intensity 7+, duration over 3 months, no treatment, high-impact triggers
+- Moderate risk: pain intensity 4-6, duration 1-3 months, some triggers
+- Low risk: pain intensity 1-3, recent onset, limited triggers
+- Always consider work type (desk work = postural risk, manual = overuse risk)`;
 
-Analyze and return JSON response.`;
+    const userMessage = `Patient assessment data:
+- Pain location(s): ${JSON.stringify(answers.pain_location)}
+- When it hurts: ${answers.pain_timing}
+- Movement triggers: ${JSON.stringify(answers.movement_triggers)}
+- Duration: ${answers.pain_duration}
+- Pain intensity: ${answers.pain_intensity}/10
+- Work type: ${answers.work_type}
+- Training history: ${answers.training_history}
+- Activity level: ${answers.activity_level} days/week
+- Previous treatment: ${JSON.stringify(answers.previous_treatment)}
+
+Generate a comprehensive movement analysis and 7-day corrective plan.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -54,7 +83,7 @@ Analyze and return JSON response.`;
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
+        max_tokens: 4000,
         messages: [{ role: 'user', content: systemPrompt + '\n\n' + userMessage }]
       })
     });
