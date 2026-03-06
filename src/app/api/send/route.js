@@ -147,25 +147,160 @@ export async function POST(request) {
 </body>
 </html>`;
 
+    // Build full Q&A table
+    const qaRows = [
+      { q: 'Pain location(s)', a: Array.isArray(answers?.pain_location) ? answers.pain_location.join(', ') : '—' },
+      { q: 'When does it hurt', a: answers?.pain_timing || '—' },
+      { q: 'Movement triggers', a: Array.isArray(answers?.movement_triggers) ? answers.movement_triggers.join(', ') : '—' },
+      { q: 'Duration', a: answers?.pain_duration || '—' },
+      { q: 'Pain intensity', a: `${answers?.pain_intensity ?? '—'}/10` },
+      { q: 'Work situation', a: answers?.work_type || '—' },
+      { q: 'Training background', a: answers?.training_history || '—' },
+      { q: 'Activity level', a: `${answers?.activity_level ?? '—'} days/week` },
+      { q: 'Previous treatment', a: Array.isArray(answers?.previous_treatment) ? answers.previous_treatment.join(', ') : '—' },
+    ].map(row => `
+      <tr>
+        <td style="padding:10px 14px;border-bottom:1px solid #f0f0f0;width:40%;vertical-align:top;">
+          <span style="font-size:11px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:0.5px;">${row.q}</span>
+        </td>
+        <td style="padding:10px 14px;border-bottom:1px solid #f0f0f0;vertical-align:top;">
+          <span style="font-size:13px;color:#111;">${row.a}</span>
+        </td>
+      </tr>`).join('');
+
+    // Build limitations for coach
+    const coachLimitations = Array.isArray(result?.movement_limitations)
+      ? result.movement_limitations.map(lim => `
+        <div style="margin-bottom:12px;padding:14px;background:#fafafa;border-left:3px solid ${riskColor};">
+          <div style="font-size:13px;font-weight:700;color:#111;margin-bottom:4px;">${lim.icon || ''} ${lim.name || ''}</div>
+          <div style="font-size:12px;color:#555;line-height:1.6;">${lim.description || lim.desc || ''}</div>
+        </div>`).join('')
+      : '';
+
+    // Build risk factors for coach
+    const coachRiskFactors = Array.isArray(result?.risk_factors)
+      ? result.risk_factors.map(r => `<div style="font-size:13px;color:#333;padding:6px 0;border-bottom:1px solid #f0f0f0;">• ${r}</div>`).join('')
+      : '';
+
+    // Build 7-day plan for coach
+    const coachPlan = Array.isArray(result?.seven_day_plan)
+      ? result.seven_day_plan.map(day => `
+        <div style="margin-bottom:12px;border:1px solid #e8e8e8;">
+          <div style="padding:10px 14px;background:#f5f5f5;border-bottom:1px solid #e8e8e8;">
+            <strong style="font-size:12px;color:#111;text-transform:uppercase;letter-spacing:1px;">Day ${day.day} — ${day.title || ''}</strong>
+            ${day.focus ? `<span style="font-size:10px;color:#888;margin-left:8px;">${day.focus}</span>` : ''}
+          </div>
+          <div style="padding:10px 14px;">
+            ${(day.exercises || []).map((ex, i) => `
+              <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #f5f5f5;">
+                <span style="font-size:12px;font-weight:700;color:#111;">${i+1}. ${ex.name || ''}</span>
+                ${ex.sets || ex.duration || ex.reps ? `<span style="font-size:11px;color:#888;margin-left:8px;">${[ex.sets, ex.reps || ex.duration].filter(Boolean).join(' · ')}</span>` : ''}
+                ${ex.note ? `<div style="font-size:11px;color:#666;margin-top:2px;line-height:1.5;">${ex.note}</div>` : ''}
+              </div>`).join('')}
+            ${day.note ? `<div style="font-size:11px;color:#888;font-style:italic;padding-top:4px;">${day.note}</div>` : ''}
+          </div>
+        </div>`).join('')
+      : '';
+
     const coachHtml = `<!DOCTYPE html>
 <html>
-<body style="margin:0;padding:32px;background:#f5f5f5;font-family:Arial,sans-serif;">
-<div style="max-width:520px;background:#fff;padding:28px;border-left:4px solid ${riskColor};">
-  <h2 style="margin:0 0 16px;font-size:16px;">New Pain & Performance Scan</h2>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Name:</strong> ${name}</p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Email:</strong> ${email}</p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Risk:</strong> <span style="color:${riskColor};font-weight:bold;">${result?.overall_risk || '—'}</span></p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Primary area:</strong> ${result?.primary_area || '—'}</p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Pain intensity:</strong> ${answers?.pain_intensity ?? '—'}/10</p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Duration:</strong> ${answers?.pain_duration || '—'}</p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Location(s):</strong> ${Array.isArray(answers?.pain_location) ? answers.pain_location.join(', ') : '—'}</p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Work:</strong> ${answers?.work_type || '—'}</p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Training:</strong> ${answers?.training_history || '—'}</p>
-  <p style="margin:0 0 6px;font-size:13px;"><strong>Activity:</strong> ${answers?.activity_level ?? '—'} days/week</p>
-  <p style="margin:0 0 16px;font-size:13px;"><strong>Prior treatment:</strong> ${Array.isArray(answers?.previous_treatment) ? answers.previous_treatment.join(', ') : '—'}</p>
-  <hr style="border:none;border-top:1px solid #eee;margin:0 0 16px;">
-  <p style="margin:0;font-size:12px;color:#555;font-style:italic;">"${result?.coach_insight || ''}"</p>
-</div>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+<tr><td align="center">
+<table width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;">
+
+  <!-- HEADER -->
+  <tr><td style="background:#111;padding:20px 28px;border-bottom:4px solid ${riskColor};">
+    <div style="font-size:18px;font-weight:900;letter-spacing:3px;color:#fff;text-transform:uppercase;">9toFit — Coach Dashboard</div>
+    <div style="font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-top:4px;">New Pain & Performance Scan Submission</div>
+  </td></tr>
+
+  <!-- ALERT BANNER -->
+  <tr><td style="background:${riskColor};padding:14px 28px;">
+    <div style="font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px;">
+      ⚡ ${result?.overall_risk?.toUpperCase() || 'MODERATE'} RISK — ${result?.primary_area || 'See below'} — Pain ${answers?.pain_intensity ?? '?'}/10
+    </div>
+  </td></tr>
+
+  <!-- CLIENT INFO -->
+  <tr><td style="background:#fff;padding:24px 28px 0;">
+    <div style="font-size:10px;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:12px;">Client</div>
+    <div style="font-size:22px;font-weight:900;color:#111;margin-bottom:4px;">${name}</div>
+    <a href="mailto:${email}" style="font-size:14px;color:#0066cc;text-decoration:none;">${email}</a>
+    <div style="margin-top:16px;">
+      <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#111;color:#fff;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:2px;padding:10px 20px;text-transform:uppercase;margin-right:8px;">Book Call with ${name} →</a>
+    </div>
+  </td></tr>
+
+  <!-- DIVIDER -->
+  <tr><td style="background:#fff;padding:20px 28px 0;">
+    <div style="height:1px;background:#eee;"></div>
+    <div style="font-size:10px;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-top:20px;margin-bottom:12px;">Full Assessment Answers</div>
+  </td></tr>
+
+  <!-- Q&A TABLE -->
+  <tr><td style="background:#fff;padding:0 28px 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;">
+      ${qaRows}
+    </table>
+  </td></tr>
+
+  <!-- AI ANALYSIS HEADER -->
+  <tr><td style="background:#111;padding:14px 28px;">
+    <div style="font-size:10px;letter-spacing:2px;color:#888;text-transform:uppercase;">AI Movement Analysis</div>
+  </td></tr>
+
+  <!-- EXPERT INSIGHT -->
+  ${result?.coach_insight ? `
+  <tr><td style="background:#fff;padding:20px 28px;border-left:4px solid ${riskColor};">
+    <div style="font-size:10px;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:10px;">Expert Assessment</div>
+    <div style="font-size:15px;color:#111;line-height:1.8;font-style:italic;">"${result.coach_insight}"</div>
+  </td></tr>` : ''}
+
+  <!-- MOVEMENT LIMITATIONS -->
+  ${coachLimitations ? `
+  <tr><td style="background:#fff;padding:20px 28px 8px;">
+    <div style="font-size:10px;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:12px;">Movement Limitations</div>
+    ${coachLimitations}
+  </td></tr>` : ''}
+
+  <!-- RISK FACTORS -->
+  ${coachRiskFactors ? `
+  <tr><td style="background:#fff;padding:8px 28px 20px;">
+    <div style="font-size:10px;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:12px;">Risk Factors</div>
+    ${coachRiskFactors}
+  </td></tr>` : ''}
+
+  <!-- 7-DAY PLAN -->
+  ${coachPlan ? `
+  <tr><td style="background:#fff;padding:8px 28px 20px;">
+    <div style="height:1px;background:#eee;margin-bottom:20px;"></div>
+    <div style="font-size:10px;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:14px;">Prescribed 7-Day Plan</div>
+    ${coachPlan}
+  </td></tr>` : ''}
+
+  <!-- CALL PREP NOTES -->
+  <tr><td style="background:#fffbf0;padding:20px 28px;border:1px solid #ffe08a;">
+    <div style="font-size:10px;letter-spacing:2px;color:#b8860b;text-transform:uppercase;margin-bottom:10px;">📋 Call Preparation Notes</div>
+    <div style="font-size:13px;color:#333;line-height:1.8;">
+      <strong>Key talking points for the strategy call:</strong><br>
+      • Pain area: <strong>${Array.isArray(answers?.pain_location) ? answers.pain_location.join(' + ') : '—'}</strong> — duration <strong>${answers?.pain_duration || '—'}</strong><br>
+      • Intensity <strong>${answers?.pain_intensity ?? '—'}/10</strong> — triggered by <strong>${Array.isArray(answers?.movement_triggers) ? answers.movement_triggers.slice(0,2).join(', ') : '—'}</strong><br>
+      • Work context: <strong>${answers?.work_type || '—'}</strong> — training: <strong>${answers?.training_history || '—'}</strong><br>
+      • Previous treatment: <strong>${Array.isArray(answers?.previous_treatment) ? answers.previous_treatment.join(', ') : 'None'}</strong><br>
+      • Risk level: <strong style="color:${riskColor};">${result?.overall_risk || '—'}</strong> — primary limitation: <strong>${result?.primary_area || '—'}</strong>
+    </div>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:16px 0;">
+    <div style="font-size:9px;letter-spacing:2px;color:#aaa;text-transform:uppercase;text-align:center;font-family:monospace;">9toFit Coach Dashboard · Auto-generated from Pain & Performance Scan</div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
 </body>
 </html>`;
 
