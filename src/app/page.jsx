@@ -7,9 +7,9 @@ const STYLES = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --ink: #ffffff;
-    --paper: #1c1c1c;
-    --warm: #242424;
-    --border: #2a2a2a;
+    --paper: #161616;
+    --warm: #1e1e1e;
+    --border: #252525;
     --accent: #ffffff;
     --accent-light: rgba(255,255,255,0.06);
     --gold: #cccccc;
@@ -19,9 +19,9 @@ const STYLES = `
     --green: #aaaaaa;
     --green-light: rgba(255,255,255,0.04);
   }
-  html, body { height: 100%; background: #1c1c1c; }
-  body { font-family: 'Barlow', sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; background: #1c1c1c; }
-  .app { min-height: 100vh; display: flex; flex-direction: column; background: #1c1c1c; }
+  html, body { height: 100%; background: #161616; }
+  body { font-family: 'Barlow', sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; background: #161616; }
+  .app { min-height: 100vh; display: flex; flex-direction: column; background: #161616; }
   .app::before { content: none; }
 
   .main { flex: 1; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: 0 20px 60px; }
