@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -385,6 +385,18 @@ export default function App() {
   const [emailSent, setEmailSent] = useState(false);
   const [analyzeStep, setAnalyzeStep] = useState(0);
   const [expandedDays, setExpandedDays] = useState({ 0: true });
+
+  // Report height to parent WordPress page so iframe resizes automatically
+  useEffect(() => {
+    const reportHeight = () => {
+      const height = document.body.scrollHeight;
+      window.parent.postMessage({ type: 'iframeHeight', height }, '*');
+    };
+    reportHeight();
+    const observer = new ResizeObserver(reportHeight);
+    observer.observe(document.body);
+    return () => observer.disconnect();
+  }, [phase]);
 
   const q = QUESTIONS[step];
   const progress = (step / QUESTIONS.length) * 100;
