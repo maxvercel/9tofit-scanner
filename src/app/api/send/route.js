@@ -177,7 +177,7 @@ export async function POST(request) {
       body: JSON.stringify({
         from: `9toFit Performance <${fromEmail}>`,
         to: [email],
-        subject: `Your Pain & Performance Report — ${result?.overall_risk || ''} Risk · 7-Day Plan Inside`,
+        subject: `Your Pain and Performance Report - ${result?.overall_risk || ''} Risk - 7-Day Plan Inside`,
         html: clientHtml
       })
     });
