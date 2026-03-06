@@ -2,130 +2,143 @@ export async function POST(request) {
   try {
     const { name, email, result, answers } = await request.json();
 
-    const riskColor = {
-      low: '#1a6b3c',
-      moderate: '#b8922a',
-      high: '#c8392b'
-    }[result.overall_risk?.toLowerCase()] || '#b8922a';
+    console.log('Send route called for:', email, 'risk:', result?.overall_risk);
 
-    const planRows = Array.isArray(result.seven_day_plan)
+    const fromEmail = 'noreply@9tofit.nl';
+    const coachEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'max@9tofit.nl';
+
+    const riskColor = result?.overall_risk?.toLowerCase() === 'high' ? '#ff4444'
+      : result?.overall_risk?.toLowerCase() === 'low' ? '#44bb44'
+      : '#ffaa00';
+
+    const planHtml = Array.isArray(result?.seven_day_plan)
       ? result.seven_day_plan.map(day => `
-        <tr>
-          <td style="padding:14px 20px;border-bottom:1px solid #2a2a2a;vertical-align:top;width:80px;">
-            <span style="font-family:'Courier New',monospace;font-size:10px;letter-spacing:2px;color:#666666;text-transform:uppercase;">Day ${day.day}</span>
-          </td>
-          <td style="padding:14px 20px;border-bottom:1px solid #2a2a2a;vertical-align:top;">
-            <strong style="font-size:13px;color:#ffffff;">${day.title || ''}</strong>
-            ${day.focus ? `<span style="display:inline-block;margin-left:8px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:1px;color:#aaaaaa;text-transform:uppercase;padding:2px 8px;border:1px solid rgba(200,57,43,0.3);">${day.focus}</span>` : ''}
-            <ul style="margin:10px 0 0;padding:0;list-style:none;">
-              ${(day.exercises || []).map(ex => `<li style="font-size:12px;color:#888888;margin-bottom:4px;padding-left:12px;border-left:2px solid #e8e4dd;">
-                <strong style="color:#ffffff;">${ex.name}</strong>
-                ${ex.sets ? ` — ${ex.sets}` : ''}${ex.duration ? ` · ${ex.duration}` : ''}${ex.reps ? ` · ${ex.reps}` : ''}
-              </li>`).join('')}
-            </ul>
-          </td>
-        </tr>`).join('')
+        <tr><td style="padding:0 0 12px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#1e1e1e;">
+            <tr><td style="padding:12px 16px;border-bottom:1px solid #2a2a2a;">
+              <span style="font-size:10px;color:#666;font-family:monospace;letter-spacing:2px;">DAY ${day.day || ''}</span>
+              <strong style="font-size:13px;color:#fff;margin-left:10px;">${day.title || ''}</strong>
+              ${day.focus ? `<span style="font-size:10px;color:#888;margin-left:8px;font-family:monospace;">${day.focus}</span>` : ''}
+            </td></tr>
+            <tr><td style="padding:12px 16px;">
+              ${(day.exercises || []).map((ex, i) => `
+                <div style="margin-bottom:10px;">
+                  <div style="font-size:13px;font-weight:700;color:#fff;">${i + 1}. ${ex.name || ''}</div>
+                  ${ex.sets || ex.duration || ex.reps ? `<div style="font-size:11px;color:#888;font-family:monospace;margin:2px 0;">${[ex.sets, ex.reps || ex.duration].filter(Boolean).join(' · ')}</div>` : ''}
+                  ${ex.note ? `<div style="font-size:12px;color:#aaa;line-height:1.5;">${ex.note}</div>` : ''}
+                </div>`).join('')}
+            </td></tr>
+          </table>
+        </td></tr>`).join('')
       : '';
 
-    const limitationsRows = Array.isArray(result.movement_limitations)
+    const limitationsHtml = Array.isArray(result?.movement_limitations)
       ? result.movement_limitations.map(lim => `
-        <tr>
-          <td style="padding:14px 20px;border-bottom:1px solid #2a2a2a;vertical-align:top;">
-            <span style="font-size:18px;">${lim.icon || '⚠️'}</span>
-          </td>
-          <td style="padding:14px 20px;border-bottom:1px solid #2a2a2a;vertical-align:top;">
-            <strong style="font-size:13px;color:#ffffff;">${lim.name || ''}</strong><br>
-            <span style="font-size:12px;color:#888888;line-height:1.6;">${lim.description || lim.desc || ''}</span>
-          </td>
-        </tr>`).join('')
+        <div style="margin-bottom:10px;padding:14px 16px;background:#1e1e1e;border-left:3px solid ${riskColor};">
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">${lim.icon || ''} ${lim.name || ''}</div>
+          ${lim.description ? `<div style="font-size:12px;color:#aaa;line-height:1.6;">${lim.description}</div>` : ''}
+        </div>`).join('')
+      : '';
+
+    const riskFactorsHtml = Array.isArray(result?.risk_factors)
+      ? result.risk_factors.map(r => `<div style="font-size:13px;color:#aaa;padding:6px 0;border-bottom:1px solid #2a2a2a;">• ${r}</div>`).join('')
       : '';
 
     const clientHtml = `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#111111;font-family:'Helvetica Neue',Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#111111;padding:40px 20px;">
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body style="margin:0;padding:0;background:#111;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#111;padding:32px 16px;">
 <tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-  <!-- HEADER -->
-  <tr><td style="background:#000000;padding:28px 36px;border-bottom:3px solid ${riskColor};">
-    <p style="margin:0;font-size:20px;font-weight:800;letter-spacing:4px;color:#ffffff;text-transform:uppercase;">9TOFIT</p>
-    <p style="margin:4px 0 0;font-family:'Courier New',monospace;font-size:9px;letter-spacing:3px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Pain & Performance Report</p>
+  <tr><td style="background:#000;padding:24px 28px;border-bottom:3px solid ${riskColor};">
+    <div style="font-size:20px;font-weight:900;letter-spacing:3px;color:#fff;text-transform:uppercase;">9tofit</div>
+    <div style="font-size:8px;letter-spacing:3px;color:#444;text-transform:uppercase;margin-top:2px;">PERFORMANCE COACHING</div>
   </td></tr>
 
-  <!-- INTRO -->
-  <tr><td style="background:#1a1a1a;padding:32px 36px 24px;">
-    <p style="margin:0;font-family:'Courier New',monospace;font-size:9px;letter-spacing:3px;color:#666666;text-transform:uppercase;margin-bottom:12px;">Your Assessment Results</p>
-    <p style="margin:0;font-size:28px;color:#0c0c0e;font-weight:400;margin-bottom:16px;line-height:1.2;">Hey ${name},</p>
-    <p style="margin:0;font-size:13px;color:#888888;line-height:1.8;">Here is your personalised Pain & Performance report based on your assessment. Review your movement limitations, risk factors and your 7-day corrective plan below.</p>
+  <tr><td style="background:#1a1a1a;padding:28px 28px 20px;">
+    <div style="font-size:10px;letter-spacing:3px;color:#555;text-transform:uppercase;margin-bottom:10px;font-family:monospace;">Pain & Performance Report</div>
+    <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:14px;line-height:1;text-transform:uppercase;">Hey ${name},</div>
+    <div style="font-size:14px;color:#888;line-height:1.7;">Your personalised movement analysis is ready. Review your limitations, risk factors and 7-day corrective plan below.</div>
   </td></tr>
 
-  <!-- RISK BANNER -->
-  <tr><td style="padding:0 36px 24px;background:#1a1a1a;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #2a2a2a;">
+  <tr><td style="padding:2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td style="padding:16px 20px;border-right:1px solid #e8e4dd;">
-          <p style="margin:0;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:#666666;text-transform:uppercase;margin-bottom:6px;">Overall Risk</p>
-          <p style="margin:0;font-size:20px;font-weight:800;letter-spacing:2px;color:${riskColor};text-transform:uppercase;">${result.overall_risk || 'Moderate'}</p>
+        <td style="background:#1a1a1a;padding:16px 28px;border-right:1px solid #2a2a2a;width:33%;">
+          <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:6px;">Risk Level</div>
+          <div style="font-size:20px;font-weight:900;color:${riskColor};text-transform:uppercase;">${result?.overall_risk || '—'}</div>
         </td>
-        <td style="padding:16px 20px;border-right:1px solid #e8e4dd;">
-          <p style="margin:0;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:#666666;text-transform:uppercase;margin-bottom:6px;">Primary Area</p>
-          <p style="margin:0;font-size:14px;font-weight:700;color:#ffffff;">${result.primary_area || 'See below'}</p>
+        <td style="background:#1a1a1a;padding:16px 28px;border-right:1px solid #2a2a2a;width:33%;">
+          <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:6px;">Primary Area</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;">${result?.primary_area || '—'}</div>
         </td>
-        <td style="padding:16px 20px;">
-          <p style="margin:0;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:#666666;text-transform:uppercase;margin-bottom:6px;">Pain Intensity</p>
-          <p style="margin:0;font-size:14px;font-weight:700;color:#ffffff;">${answers?.pain_intensity ?? '—'}/10</p>
+        <td style="background:#1a1a1a;padding:16px 28px;width:33%;">
+          <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:6px;">Pain Score</div>
+          <div style="font-size:14px;font-weight:700;color:#fff;">${answers?.pain_intensity ?? '—'}/10</div>
         </td>
       </tr>
     </table>
   </td></tr>
 
-  <!-- EXPERT INSIGHT -->
-  ${result.coach_insight ? `
-  <tr><td style="padding:0 36px 24px;background:#1a1a1a;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);">
-      <tr><td style="padding:20px 24px;">
-        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:#aaaaaa;text-transform:uppercase;">Expert Assessment</p>
-        <p style="margin:0;font-size:14px;color:#ffffff;line-height:1.8;font-style:italic;">"${result.coach_insight}"</p>
-        <p style="margin:8px 0 0;font-family:'Courier New',monospace;font-size:9px;letter-spacing:1px;color:#666666;text-transform:uppercase;">— Max, 9toFit Movement Specialist</p>
+  ${result?.coach_insight ? `
+  <tr><td style="padding:2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border-left:3px solid ${riskColor};">
+      <tr><td style="padding:20px 28px;">
+        <div style="font-size:9px;letter-spacing:2px;color:${riskColor};text-transform:uppercase;font-family:monospace;margin-bottom:10px;">Expert Assessment</div>
+        <div style="font-size:14px;color:#ddd;line-height:1.8;font-style:italic;">"${result.coach_insight}"</div>
+        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-top:12px;">— Max, 9toFit Movement Specialist</div>
       </td></tr>
     </table>
   </td></tr>` : ''}
 
-  <!-- MOVEMENT LIMITATIONS -->
-  ${limitationsRows ? `
-  <tr><td style="padding:0 36px 8px;background:#1a1a1a;">
-    <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:#666666;text-transform:uppercase;">Movement Limitations Identified</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #2a2a2a;">
-      ${limitationsRows}
+  ${limitationsHtml ? `
+  <tr><td style="padding:2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;">
+      <tr><td style="padding:20px 28px 10px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:14px;">Movement Limitations Identified</div>
+        ${limitationsHtml}
+      </td></tr>
     </table>
   </td></tr>` : ''}
 
-  <!-- 7-DAY PLAN -->
-  ${planRows ? `
-  <tr><td style="padding:24px 36px 8px;background:#1a1a1a;">
-    <p style="margin:0 0 12px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:#666666;text-transform:uppercase;">Your 7-Day Corrective Plan</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #2a2a2a;">
-      ${planRows}
+  ${riskFactorsHtml ? `
+  <tr><td style="padding:2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;">
+      <tr><td style="padding:20px 28px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:14px;">Risk Factors</div>
+        ${riskFactorsHtml}
+      </td></tr>
     </table>
   </td></tr>` : ''}
 
-  <!-- CTA -->
-  <tr><td style="padding:24px 36px 36px;background:#1a1a1a;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#000000;padding:28px;">
-      <tr><td>
-        <p style="margin:0 0 8px;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:rgba(255,255,255,0.4);text-transform:uppercase;">Recommended next step</p>
-        <p style="margin:0 0 8px;font-size:20px;color:#ffffff;font-weight:400;">Want faster results?</p>
-        <p style="margin:0 0 20px;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;">Book a free 30-minute strategy call with Max to get a precise diagnosis and an accelerated recovery protocol tailored to your specific situation.</p>
-        <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#111111;color:#0c0c0e;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;">Book Free Call →</a>
+  ${planHtml ? `
+  <tr><td style="padding:2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;">
+      <tr><td style="padding:20px 28px 8px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:14px;">Your 7-Day Corrective Plan</div>
+        <table width="100%" cellpadding="0" cellspacing="0">${planHtml}</table>
+      </td></tr>
+    </table>
+  </td></tr>` : ''}
+
+  <tr><td style="padding:2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff;">
+      <tr><td style="padding:28px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#888;text-transform:uppercase;font-family:monospace;margin-bottom:8px;">Recommended next step</div>
+        <div style="font-size:22px;font-weight:900;color:#111;text-transform:uppercase;margin-bottom:10px;line-height:1.1;">Book a Free Strategy Call</div>
+        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:20px;">A 30-minute session with Max will give you a precise diagnosis and an accelerated recovery protocol tailored to your specific situation.</div>
+        <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#111;color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:14px 28px;text-transform:uppercase;">BOOK FREE CALL →</a>
       </td></tr>
     </table>
   </td></tr>
 
-  <!-- FOOTER -->
-  <tr><td style="padding:20px 36px;">
-    <p style="margin:0;font-family:'Courier New',monospace;font-size:9px;letter-spacing:2px;color:#666666;text-transform:uppercase;">9toFit Performance · 9tofit.nl</p>
+  <tr><td style="padding:24px 0 8px;">
+    <div style="font-size:9px;letter-spacing:2px;color:#333;text-transform:uppercase;font-family:monospace;text-align:center;">9toFit Performance Coaching · 9tofit.nl</div>
   </td></tr>
 
 </table>
@@ -136,83 +149,78 @@ export async function POST(request) {
 
     const coachHtml = `<!DOCTYPE html>
 <html>
-<body style="margin:0;padding:40px;background:#f5f5f5;font-family:Arial,sans-serif;">
-<div style="max-width:520px;background:#1a1a1a;padding:32px;border-left:4px solid ${riskColor};">
-  <h2 style="margin:0 0 20px;font-size:17px;">New Pain & Performance Assessment</h2>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Name:</strong> ${name}</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Email:</strong> ${email}</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Risk:</strong> <span style="color:${riskColor};font-weight:bold;">${result.overall_risk}</span></p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Primary area:</strong> ${result.primary_area || '—'}</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Pain intensity:</strong> ${answers?.pain_intensity ?? '—'}/10</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Duration:</strong> ${answers?.pain_duration || '—'}</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Location(s):</strong> ${Array.isArray(answers?.pain_location) ? answers.pain_location.join(', ') : '—'}</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Work:</strong> ${answers?.work_type || '—'}</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Training:</strong> ${answers?.training_history || '—'}</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Activity:</strong> ${answers?.activity_level ?? '—'} days/week</p>
-  <p style="margin:0 0 8px;font-size:14px;"><strong>Prior treatment:</strong> ${Array.isArray(answers?.previous_treatment) ? answers.previous_treatment.join(', ') : '—'}</p>
-  <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
-  <p style="margin:0;font-size:13px;color:#444;font-style:italic;">"${result.coach_insight || ''}"</p>
-  <hr style="border:none;border-top:1px solid #eee;margin:16px 0;">
-  <p style="margin:0;font-size:12px;color:#27ae60;">✅ Added to Mailchimp list</p>
+<body style="margin:0;padding:32px;background:#f5f5f5;font-family:Arial,sans-serif;">
+<div style="max-width:520px;background:#fff;padding:28px;border-left:4px solid ${riskColor};">
+  <h2 style="margin:0 0 16px;font-size:16px;">New Pain & Performance Scan</h2>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Name:</strong> ${name}</p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Email:</strong> ${email}</p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Risk:</strong> <span style="color:${riskColor};font-weight:bold;">${result?.overall_risk || '—'}</span></p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Primary area:</strong> ${result?.primary_area || '—'}</p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Pain intensity:</strong> ${answers?.pain_intensity ?? '—'}/10</p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Duration:</strong> ${answers?.pain_duration || '—'}</p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Location(s):</strong> ${Array.isArray(answers?.pain_location) ? answers.pain_location.join(', ') : '—'}</p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Work:</strong> ${answers?.work_type || '—'}</p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Training:</strong> ${answers?.training_history || '—'}</p>
+  <p style="margin:0 0 6px;font-size:13px;"><strong>Activity:</strong> ${answers?.activity_level ?? '—'} days/week</p>
+  <p style="margin:0 0 16px;font-size:13px;"><strong>Prior treatment:</strong> ${Array.isArray(answers?.previous_treatment) ? answers.previous_treatment.join(', ') : '—'}</p>
+  <hr style="border:none;border-top:1px solid #eee;margin:0 0 16px;">
+  <p style="margin:0;font-size:12px;color:#555;font-style:italic;">"${result?.coach_insight || ''}"</p>
 </div>
 </body>
 </html>`;
 
-    const fromEmail = 'noreply@9tofit.nl';
-    const coachEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'max@9tofit.nl';
-
-    // 1 — Email to client
+    // Send client email
+    console.log('Sending to client:', email);
     const clientRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RESEND_API_KEY}` },
       body: JSON.stringify({
         from: `9toFit Performance <${fromEmail}>`,
-        to: email,
-        subject: `Your Pain & Performance Report — ${result.overall_risk} Risk · 7-Day Plan Inside`,
+        to: [email],
+        subject: `Your Pain & Performance Report — ${result?.overall_risk || ''} Risk · 7-Day Plan Inside`,
         html: clientHtml
       })
     });
-    if (!clientRes.ok) {
-      const e = await clientRes.json();
-      console.error('Resend client email error:', JSON.stringify(e));
-      throw new Error(`Resend: ${e.message} (name: ${e.name})`);
-    }
-    console.log('Client email sent successfully to:', email);
+    const clientData = await clientRes.json();
+    console.log('Client email result:', JSON.stringify(clientData));
+    if (!clientRes.ok) throw new Error(`Client email failed: ${clientData.message || JSON.stringify(clientData)}`);
 
-    // 2 — Notification to coach
+    // Send coach email
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RESEND_API_KEY}` },
       body: JSON.stringify({
         from: `9toFit Scanner <${fromEmail}>`,
-        to: coachEmail,
-        subject: `New Assessment: ${name} — ${result.overall_risk} Risk · ${result.primary_area || 'Pain'}`,
+        to: [coachEmail],
+        subject: `New Scan: ${name} — ${result?.overall_risk || ''} Risk · ${result?.primary_area || 'Pain'}`,
         html: coachHtml
       })
     });
-    console.log('Coach notification sent to:', coachEmail);
 
-    // 3 — Mailchimp
-    const mcServer = process.env.MAILCHIMP_SERVER;
-    const mcAudienceId = process.env.MAILCHIMP_AUDIENCE_ID;
-    const mcApiKey = process.env.MAILCHIMP_API_KEY;
-    if (mcApiKey && mcAudienceId && mcServer) {
+    // Mailchimp
+    const { MAILCHIMP_API_KEY, MAILCHIMP_SERVER, MAILCHIMP_AUDIENCE_ID } = process.env;
+    if (MAILCHIMP_API_KEY && MAILCHIMP_SERVER && MAILCHIMP_AUDIENCE_ID) {
       const parts = name.trim().split(' ');
-      const mcRes = await fetch(`https://${mcServer}.api.mailchimp.com/3.0/lists/${mcAudienceId}/members`, {
+      const mcRes = await fetch(`https://${MAILCHIMP_SERVER}.api.mailchimp.com/3.0/lists/${MAILCHIMP_AUDIENCE_ID}/members`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Basic ${Buffer.from(`anystring:${mcApiKey}`).toString('base64')}` },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${Buffer.from(`anystring:${MAILCHIMP_API_KEY}`).toString('base64')}`
+        },
         body: JSON.stringify({
           email_address: email, status: 'subscribed',
           merge_fields: { FNAME: parts[0] || name, LNAME: parts.slice(1).join(' ') || '' },
           tags: ['pain-performance-scan']
         })
       });
-      if (!mcRes.ok) { const e = await mcRes.json(); if (e.title !== 'Member Exists') console.error('Mailchimp:', e.detail); }
+      const mcData = await mcRes.json();
+      if (!mcRes.ok && mcData.title !== 'Member Exists') console.error('Mailchimp:', mcData.detail);
     }
 
     return Response.json({ success: true });
+
   } catch (error) {
-    console.error('Send error:', error);
+    console.error('Send error:', error.message);
     return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 }
