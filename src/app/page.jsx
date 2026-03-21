@@ -441,11 +441,31 @@ export default function App() {
       if (!data.success) throw new Error(data.error || "Analysis failed");
       setResult(data.result);
       setPhase("result");
+      // Send email report (existing flow)
       fetch("/api/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: userInfo.name, email: userInfo.email, result: data.result, answers, type: "pain_performance" }),
       }).then(() => setEmailSent(true)).catch(() => {});
+      // Submit to 9toFit platform → creates account + AI program + magic link
+      const platformUrl = process.env.NEXT_PUBLIC_PLATFORM_URL || "https://app.9tofit.nl";
+      fetch(`${platformUrl}/api/scan-submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          first_name: userInfo.name,
+          email: userInfo.email,
+          pain_locations: answers.pain_location || [],
+          pain_timing: answers.pain_timing || "",
+          movement_triggers: answers.movement_triggers || [],
+          pain_duration: answers.pain_duration || "",
+          pain_intensity: answers.pain_intensity ?? 0,
+          work_situation: answers.work_type || "",
+          training_background: answers.training_history || "",
+          activity_days_per_week: answers.activity_level ?? 0,
+          professional_help: answers.previous_treatment || [],
+        }),
+      }).catch((err) => console.error("Platform submit error:", err));
     } catch (e) {
       setError(e.message);
       setPhase("gate");
