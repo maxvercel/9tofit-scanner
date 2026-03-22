@@ -464,6 +464,8 @@ export default function App() {
           training_background: answers.training_history || "",
           activity_days_per_week: answers.activity_level ?? 0,
           professional_help: answers.previous_treatment || [],
+          // Pass scanner AI result for logging/future reuse (platform still runs its own generation)
+          scanner_ai_result: data.result || null,
         }),
       }).catch((err) => console.error("Platform submit error:", err));
     } catch (e) {
@@ -609,9 +611,12 @@ export default function App() {
                   <div className="field-wrap">
                     <label className="field-label">Email Address</label>
                     <input className="field-input" type="email" placeholder="john@example.com" value={userInfo.email} onChange={(e) => setUserInfo((p) => ({ ...p, email: e.target.value }))} />
+                    {userInfo.email && userInfo.email.includes("@") && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(userInfo.email) && (
+                      <div style={{ fontFamily: "'DM Mono', monospace", fontSize: "10px", color: "#ff6b6b", marginTop: "6px", letterSpacing: "0.5px" }}>Check je emailadres — dit lijkt niet geldig</div>
+                    )}
                   </div>
                 </div>
-                <button className="submit-btn" onClick={runAnalysis} disabled={!userInfo.name || !userInfo.email || !userInfo.email.includes("@")}>
+                <button className="submit-btn" onClick={runAnalysis} disabled={!userInfo.name || !userInfo.email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(userInfo.email)}>
                   Analyse My Movement →
                 </button>
                 <div className="submit-note">Your results will be emailed immediately · No spam, ever</div>

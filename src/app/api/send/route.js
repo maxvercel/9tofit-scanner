@@ -349,7 +349,11 @@ export async function POST(request) {
         })
       });
       const mcData = await mcRes.json();
-      if (!mcRes.ok && mcData.title !== 'Member Exists') console.error('Mailchimp:', mcData.detail);
+      if (!mcRes.ok && mcData.title !== 'Member Exists') {
+        console.error('Mailchimp error:', mcData.detail);
+      } else {
+        console.log('Mailchimp:', mcRes.ok ? 'subscribed' : 'already exists', email);
+      }
     }
 
     return Response.json({ success: true });
