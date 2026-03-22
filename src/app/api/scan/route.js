@@ -1,10 +1,77 @@
-﻿export async function POST(request) {
+// ── Rate Limiting ──────────────────────────────
+const rateLimitMap = new Map()
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+const RATE_LIMIT_MAX_PER_IP = 10 // max 10 scans per IP per hour
+
+function isRateLimited(key) {
+  const now = Date.now()
+  const entry = rateLimitMap.get(key)
+
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS })
+    return false
+  }
+
+  entry.count++
+  return entry.count > RATE_LIMIT_MAX_PER_IP
+}
+
+// Clean up stale entries every 10 minutes
+setInterval(() => {
+  const now = Date.now()
+  for (const [key, entry] of rateLimitMap) {
+    if (now > entry.resetAt) rateLimitMap.delete(key)
+  }
+}, 10 * 60 * 1000)
+
+// Required answer fields
+const REQUIRED_FIELDS = [
+  'pain_location', 'pain_timing', 'movement_triggers',
+  'pain_duration', 'pain_intensity', 'work_type',
+  'training_history', 'activity_level', 'previous_treatment'
+]
+
+export async function POST(request) {
   try {
+    // ── Rate limiting ───
+    const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    if (isRateLimited(`ip:${clientIp}`)) {
+      return Response.json(
+        { success: false, error: 'Te veel verzoeken. Probeer het later opnieuw.' },
+        { status: 429 }
+      )
+    }
+
     const { type, answers, userInfo } = await request.json();
 
-    const systemPrompt = `You are Max, a specialist in injury rehabilitation and movement correction at 9toFit. You work with busy men (30â€“55) who have pain affecting their training and daily life.
+    // ── Input validation ───
+    if (!answers || typeof answers !== 'object') {
+      return Response.json(
+        { success: false, error: 'Ongeldige scan data.' },
+        { status: 400 }
+      )
+    }
 
-Based on the assessment answers, generate a detailed, expert movement analysis. Be specific, authoritative and genuinely helpful â€” this should feel like a real consultation, not a generic response.
+    const missing = REQUIRED_FIELDS.filter(f => answers[f] === undefined || answers[f] === null)
+    if (missing.length > 0) {
+      return Response.json(
+        { success: false, error: `Niet alle vragen zijn beantwoord.` },
+        { status: 400 }
+      )
+    }
+
+    // Validate pain_intensity is a number 1-10
+    const intensity = Number(answers.pain_intensity)
+    if (isNaN(intensity) || intensity < 1 || intensity > 10) {
+      return Response.json(
+        { success: false, error: 'Pijnintensiteit moet tussen 1 en 10 zijn.' },
+        { status: 400 }
+      )
+    }
+
+    const systemPrompt = `You are Max, a specialist in injury rehabilitation and movement correction at 9toFit. You work with busy men (30–55) who have pain affecting their training and daily life.
+
+Based on the assessment answers, generate a detailed, expert movement analysis. Be specific, authoritative and genuinely helpful – this should feel like a real consultation, not a generic response.
 
 You MUST return ONLY valid JSON with NO markdown, NO backticks, NO explanation outside the JSON.
 
@@ -22,9 +89,9 @@ Return this exact structure:
     }
   ],
   "risk_factors": [
-    "Risk factor 1 â€” specific explanation tied to their answers",
-    "Risk factor 2 â€” specific explanation",
-    "Risk factor 3 â€” specific explanation"
+    "Risk factor 1 – specific explanation tied to their answers",
+    "Risk factor 2 – specific explanation",
+    "Risk factor 3 – specific explanation"
   ],
   "coach_insight": "2-3 sentences of direct, expert insight. Be specific to their situation. Reference their pain location, work type, and duration. End with one clear priority action.",
   "seven_day_plan": [
@@ -90,20 +157,32 @@ Generate a comprehensive movement analysis and 7-day corrective plan.`;
 
     if (!response.ok) {
       const err = await response.json();
-      throw new Error(err?.error?.message || `HTTP ${response.status}`);
+      console.error('Anthropic API error:', err?.error?.message || `HTTP ${response.status}`);
+      return Response.json(
+        { success: false, error: 'Analyse kon niet worden gegenereerd. Probeer het opnieuw.' },
+        { status: 502 }
+      );
     }
 
     const data = await response.json();
     const text = data.content?.map(c => c.text || '').join('') || '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error('No JSON in response');
+    if (!jsonMatch) {
+      console.error('No JSON in AI response');
+      return Response.json(
+        { success: false, error: 'Analyse kon niet worden verwerkt. Probeer het opnieuw.' },
+        { status: 500 }
+      );
+    }
     const parsed = JSON.parse(jsonMatch[0]);
 
     return Response.json({ success: true, result: parsed });
 
   } catch (error) {
     console.error('Scan error:', error);
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    return Response.json(
+      { success: false, error: 'Er is een fout opgetreden. Probeer het later opnieuw.' },
+      { status: 500 }
+    );
   }
 }
-
