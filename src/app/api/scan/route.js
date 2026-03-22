@@ -1,10 +1,10 @@
-export async function POST(request) {
+﻿export async function POST(request) {
   try {
     const { type, answers, userInfo } = await request.json();
 
-    const systemPrompt = `You are Max, a specialist in injury rehabilitation and movement correction at 9toFit. You work with busy men (30–55) who have pain affecting their training and daily life.
+    const systemPrompt = `You are Max, a specialist in injury rehabilitation and movement correction at 9toFit. You work with busy men (30â€“55) who have pain affecting their training and daily life.
 
-Based on the assessment answers, generate a detailed, expert movement analysis. Be specific, authoritative and genuinely helpful — this should feel like a real consultation, not a generic response.
+Based on the assessment answers, generate a detailed, expert movement analysis. Be specific, authoritative and genuinely helpful â€” this should feel like a real consultation, not a generic response.
 
 You MUST return ONLY valid JSON with NO markdown, NO backticks, NO explanation outside the JSON.
 
@@ -22,9 +22,9 @@ Return this exact structure:
     }
   ],
   "risk_factors": [
-    "Risk factor 1 — specific explanation tied to their answers",
-    "Risk factor 2 — specific explanation",
-    "Risk factor 3 — specific explanation"
+    "Risk factor 1 â€” specific explanation tied to their answers",
+    "Risk factor 2 â€” specific explanation",
+    "Risk factor 3 â€” specific explanation"
   ],
   "coach_insight": "2-3 sentences of direct, expert insight. Be specific to their situation. Reference their pain location, work type, and duration. End with one clear priority action.",
   "seven_day_plan": [
@@ -83,7 +83,7 @@ Generate a comprehensive movement analysis and 7-day corrective plan.`;
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4000,
+        max_tokens: 8000,
         messages: [{ role: 'user', content: systemPrompt + '\n\n' + userMessage }]
       })
     });
@@ -106,3 +106,4 @@ Generate a comprehensive movement analysis and 7-day corrective plan.`;
     return Response.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
