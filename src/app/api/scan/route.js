@@ -73,41 +73,43 @@ export async function POST(request) {
 
 Based on the assessment answers, generate a detailed, expert movement analysis. Be specific, authoritative and genuinely helpful – this should feel like a real consultation, not a generic response.
 
+IMPORTANT: All text output must be in Dutch (Nederlands).
+
 You MUST return ONLY valid JSON with NO markdown, NO backticks, NO explanation outside the JSON.
 
 Return this exact structure:
 {
-  "headline": "Short impactful headline about their main issue (max 8 words, use *italic* around key phrase)",
-  "primary_area": "Main pain location in 1-3 words",
-  "overall_risk": "Low | Moderate | High",
-  "urgency": "Short urgency label e.g. 'Needs attention' or 'Monitor closely' or 'Act now'",
+  "headline": "Short impactful headline about their main issue (max 8 words, use *italic* around key phrase) - IN DUTCH",
+  "primary_area": "Main pain location in 1-3 words - IN DUTCH",
+  "overall_risk": "Laag | Gemiddeld | Hoog",
+  "urgency": "Short urgency label in Dutch e.g. 'Aandacht nodig' or 'Goed monitoren' or 'Nu aanpakken'",
   "movement_limitations": [
     {
       "icon": "relevant emoji",
-      "name": "Limitation name",
-      "description": "2-3 sentence explanation of why this limitation exists and how it impacts daily life and training"
+      "name": "Limitation name - IN DUTCH",
+      "description": "2-3 sentence explanation of why this limitation exists and how it impacts daily life and training - IN DUTCH"
     }
   ],
   "risk_factors": [
-    "Risk factor 1 – specific explanation tied to their answers",
-    "Risk factor 2 – specific explanation",
-    "Risk factor 3 – specific explanation"
+    "Risk factor 1 – specific explanation tied to their answers - IN DUTCH",
+    "Risk factor 2 – specific explanation - IN DUTCH",
+    "Risk factor 3 – specific explanation - IN DUTCH"
   ],
-  "coach_insight": "2-3 sentences of direct, expert insight. Be specific to their situation. Reference their pain location, work type, and duration. End with one clear priority action.",
+  "coach_insight": "2-3 sentences of direct, expert insight in Dutch. Be specific to their situation. Reference their pain location, work type, and duration. End with one clear priority action.",
   "seven_day_plan": [
     {
       "day": 1,
-      "title": "Foundation & Assessment",
-      "focus": "Mobility",
+      "title": "Foundation & Assessment (TRANSLATE TO DUTCH - e.g. 'Fundament & Beoordeling')",
+      "focus": "Mobility (TRANSLATE TO DUTCH - e.g. 'Mobiliteit')",
       "exercises": [
         {
-          "name": "Exercise name",
+          "name": "Exercise name - IN DUTCH",
           "sets": "3 sets",
           "duration": "45 seconds",
-          "note": "How to perform it and what to feel"
+          "note": "How to perform it and what to feel - IN DUTCH"
         }
       ],
-      "note": "Optional day note or progression tip"
+      "note": "Optional day note or progression tip - IN DUTCH"
     }
   ]
 }
@@ -121,6 +123,7 @@ Rules for the 7-day plan:
 - Each exercise must be specific to their pain location
 - Include sets/duration AND a coaching note for each exercise
 - Progress appropriately based on their training history and pain intensity
+- ALL DAY TITLES, EXERCISE NAMES, AND NOTES MUST BE IN DUTCH
 
 Rules for risk assessment:
 - High risk: pain intensity 7+, duration over 3 months, no treatment, high-impact triggers
