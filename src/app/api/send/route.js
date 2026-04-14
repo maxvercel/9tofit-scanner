@@ -189,6 +189,21 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
     </table>
   </td></tr>` : ''}
 
+  <tr><td style="padding:16px 0 2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #27272a;border-radius:8px;">
+      <tr>
+        <td width="50%" style="padding:20px;border-right:1px solid #27272a;vertical-align:top;">
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Toegang</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">Direct beschikbaar</div>
+        </td>
+        <td width="50%" style="padding:20px;vertical-align:top;">
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Programma</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">7-daags correctieplan</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
   <tr><td style="padding:24px 0 0 0;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid rgba(249,115,22,0.2);border-radius:8px;">
       <tr><td style="padding:24px;">
