@@ -24,11 +24,11 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000)
 
-// Required answer fields
+// Required answer fields (pain path)
 const REQUIRED_FIELDS = [
   'pain_location', 'pain_timing', 'movement_triggers',
   'pain_duration', 'pain_intensity', 'work_type',
-  'training_history', 'activity_level', 'previous_treatment'
+  'training_history', 'activity_level'
 ]
 
 export async function POST(request) {
