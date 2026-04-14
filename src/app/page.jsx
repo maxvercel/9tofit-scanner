@@ -1759,14 +1759,16 @@ export default function App() {
                 <div className="success-step">
                   <span className="success-step-num">02</span>
                   <div className="success-step-text">
-                    Je coach bekijkt je profiel en stelt een persoonlijk
-                    trainingsschema op.
+                    Kies je pakket in de app — je coach gaat dan direct aan de
+                    slag met jouw persoonlijke schema.
                   </div>
                 </div>
                 <div className="success-step">
                   <span className="success-step-num">03</span>
                   <div className="success-step-text">
-                    Je kunt direct starten zodra je schema klaarstaat in de app.
+                    {scanPath === "fysio"
+                      ? "Je coach plant een persoonlijke intake met je in."
+                      : "Je ontvangt binnen 24 uur je schema op maat."}
                   </div>
                 </div>
               </div>

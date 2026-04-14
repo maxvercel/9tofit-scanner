@@ -470,7 +470,7 @@ async function sendIntakeEmails({ name, email, fromEmail, coachEmail, scanPath, 
       <tr>
         <td width="50%" style="padding:20px;border-right:1px solid #27272a;vertical-align:top;">
           <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Toegang</div>
-          <div style="font-size:14px;color:#ffffff;font-weight:700;">14 dagen gratis</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">Na pakketkeuze</div>
         </td>
         <td width="50%" style="padding:20px;vertical-align:top;">
           <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Volgende stap</div>
