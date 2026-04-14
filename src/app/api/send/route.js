@@ -302,7 +302,7 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
   </td></tr>
 
   <tr><td style="background:#111;padding:14px 28px;">
-    <div style="font-size:10px;letter-spacing:2px;color:#888;text-transform:uppercase;">AI Bewegingsanalyse</div>
+    <div style="font-size:10px;letter-spacing:2px;color:#888;text-transform:uppercase;">Bewegingsanalyse</div>
   </td></tr>
 
   ${result?.coach_insight ? `

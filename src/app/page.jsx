@@ -624,8 +624,8 @@ export default function App() {
         .then(() => setEmailSent(true))
         .catch(() => {});
 
-      // Submit to 9toFit platform
-      submitToPlatform(aiData.result);
+      // Submit to 9toFit platform (account + magic link)
+      await submitToPlatform(aiData.result);
     } catch (e) {
       setError(e.message);
       setPhase("gate");
@@ -676,37 +676,38 @@ export default function App() {
     const platformUrl =
       process.env.NEXT_PUBLIC_PLATFORM_URL || "https://app.9tofit.nl";
     const isPain = scanPath === "pain";
-    try {
-      await fetch(`${platformUrl}/api/scan-submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          first_name: userInfo.name,
-          email: userInfo.email,
-          scan_path: scanPath,
-          referral_source: data.referralSource || null,
-          age_range: data.ageRange,
-          training_background: data.trainingBackground,
-          goals: data.goals,
-          year_goal_text: data.yearGoalText,
-          work_situation: data.workSituation,
-          work_hours_per_week: data.workHoursPerWeek,
-          has_children: data.hasChildren,
-          children_count: data.childrenCount,
-          training_days_available: data.trainingDaysAvailable,
-          start_urgency: data.startUrgency,
-          has_pain: isPain,
-          pain_locations: isPain ? painData.painLocations : [],
-          pain_intensity: isPain ? painData.painIntensity : null,
-          pain_duration: isPain ? painData.painDuration : null,
-          pain_timing: isPain ? painData.painTiming : null,
-          pain_triggers: isPain ? painData.painTriggers : [],
-          scanner_ai_result: aiResult || null,
-        }),
-      });
-    } catch (err) {
-      console.error("Platform submit error:", err);
+    const res = await fetch(`${platformUrl}/api/scan-submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        first_name: userInfo.name,
+        email: userInfo.email,
+        scan_path: scanPath,
+        referral_source: data.referralSource || null,
+        age_range: data.ageRange,
+        training_background: data.trainingBackground,
+        goals: data.goals,
+        year_goal_text: data.yearGoalText,
+        work_situation: data.workSituation,
+        work_hours_per_week: data.workHoursPerWeek,
+        has_children: data.hasChildren,
+        children_count: data.childrenCount,
+        training_days_available: data.trainingDaysAvailable,
+        start_urgency: data.startUrgency,
+        has_pain: isPain,
+        pain_locations: isPain ? painData.painLocations : [],
+        pain_intensity: isPain ? painData.painIntensity : null,
+        pain_duration: isPain ? painData.painDuration : null,
+        pain_timing: isPain ? painData.painTiming : null,
+        pain_triggers: isPain ? painData.painTriggers : [],
+        scanner_ai_result: aiResult || null,
+      }),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || "Account aanmaken mislukt. Probeer het opnieuw.");
     }
+    return res.json();
   };
 
   // ── Gate submit handler ──
@@ -779,7 +780,7 @@ export default function App() {
                   <div className="pillar-num">02</div>
                   <div className="pillar-title">Pijn of Klachten?</div>
                   <div className="pillar-desc">
-                    Heb je klachten? Dan krijg je direct een AI-bewegingsanalyse
+                    Heb je klachten? Dan krijg je direct een persoonlijke bewegingsanalyse
                     en correctief plan.
                   </div>
                 </div>
@@ -851,7 +852,7 @@ export default function App() {
                   belemmert.
                 </div>
                 <span className="path-tag orange">
-                  AI bewegingsanalyse · Correctief plan
+                  Persoonlijke bewegingsanalyse · Correctief plan
                 </span>
               </button>
 
