@@ -344,7 +344,13 @@ const WORK_SITUATIONS = [
   { id: "travel", label: "Veel onderweg", icon: "✈️", sub: "Lange ritten of vluchten" },
 ];
 
-const WORK_HOURS = [20, 25, 30, 35, 40, 45, 50];
+const WORK_HOURS = [
+  { id: "lt16", label: "<16 uur" },
+  { id: "24", label: "24 uur" },
+  { id: "32", label: "32 uur" },
+  { id: "40", label: "40 uur" },
+  { id: "46plus", label: "46+ uur" },
+];
 const TRAINING_DAYS = [2, 3, 4, 5, 6];
 
 const START_URGENCIES = [
@@ -421,7 +427,9 @@ export default function App() {
     goals: [],
     yearGoalText: "",
     workSituation: "",
-    workHoursPerWeek: 40,
+    workHoursPerWeek: "40",
+    hasChildren: null,
+    childrenCount: 0,
     trainingDaysAvailable: 3,
     startUrgency: "",
     referralSource: "",
@@ -607,6 +615,8 @@ export default function App() {
             goals: data.goals,
             year_goal_text: data.yearGoalText,
             work_hours_per_week: data.workHoursPerWeek,
+            has_children: data.hasChildren,
+            children_count: data.childrenCount,
             start_urgency: data.startUrgency,
           },
         }),
@@ -646,6 +656,8 @@ export default function App() {
             year_goal_text: data.yearGoalText,
             work_situation: data.workSituation,
             work_hours_per_week: data.workHoursPerWeek,
+            has_children: data.hasChildren,
+            children_count: data.childrenCount,
             training_days_available: data.trainingDaysAvailable,
             start_urgency: data.startUrgency,
             referral_source: data.referralSource || null,
@@ -679,6 +691,8 @@ export default function App() {
           year_goal_text: data.yearGoalText,
           work_situation: data.workSituation,
           work_hours_per_week: data.workHoursPerWeek,
+          has_children: data.hasChildren,
+          children_count: data.childrenCount,
           training_days_available: data.trainingDaysAvailable,
           start_urgency: data.startUrgency,
           has_pain: isPain,
@@ -709,7 +723,7 @@ export default function App() {
     setPhase("landing");
     setStep(0);
     setScanPath("");
-    setData({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: 40, trainingDaysAvailable: 3, startUrgency: "", referralSource: "" });
+    setData({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", referralSource: "" });
     setPainData({ painLocations: [], painIntensity: 5, painDuration: "", painTiming: "", painTriggers: [] });
     setUserInfo({ name: "", email: "" });
     setResult(null);
@@ -1029,16 +1043,54 @@ export default function App() {
                   <div className="pill-grid">
                     {WORK_HOURS.map((h) => (
                       <button
-                        key={h}
-                        className={`pill-btn ${data.workHoursPerWeek === h ? "selected" : ""}`}
+                        key={h.id}
+                        className={`pill-btn ${data.workHoursPerWeek === h.id ? "selected" : ""}`}
                         onClick={() =>
-                          setData((d) => ({ ...d, workHoursPerWeek: h }))
+                          setData((d) => ({ ...d, workHoursPerWeek: h.id }))
                         }
                       >
-                        {h} uur
+                        {h.label}
                       </button>
                     ))}
                   </div>
+
+                  <div className="section-label">Heb je kinderen?</div>
+                  <div className="pill-grid">
+                    <button
+                      className={`pill-btn ${data.hasChildren === false ? "selected" : ""}`}
+                      onClick={() =>
+                        setData((d) => ({ ...d, hasChildren: false, childrenCount: 0 }))
+                      }
+                    >
+                      Nee
+                    </button>
+                    <button
+                      className={`pill-btn ${data.hasChildren === true ? "selected" : ""}`}
+                      onClick={() =>
+                        setData((d) => ({ ...d, hasChildren: true, childrenCount: d.childrenCount || 1 }))
+                      }
+                    >
+                      Ja
+                    </button>
+                  </div>
+                  {data.hasChildren && (
+                    <>
+                      <div className="section-label">Hoeveel kinderen?</div>
+                      <div className="pill-grid">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <button
+                            key={n}
+                            className={`pill-btn ${data.childrenCount === n ? "selected" : ""}`}
+                            onClick={() =>
+                              setData((d) => ({ ...d, childrenCount: n }))
+                            }
+                          >
+                            {n}{n === 5 ? "+" : ""}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
                   <div className="section-label">
                     Hoeveel dagen per week kun je trainen?
@@ -1084,7 +1136,7 @@ export default function App() {
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      {scanPath === "pain" ? "Volgende →" : "Ontvang Mijn Rapport →"}
+                      {scanPath === "pain" ? "Volgende →" : "Verder →"}
                     </button>
                   </div>
                 </div>
@@ -1267,7 +1319,7 @@ export default function App() {
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      Ontvang Mijn Rapport →
+                      Bekijk Mijn Analyse →
                     </button>
                   </div>
                 </div>
