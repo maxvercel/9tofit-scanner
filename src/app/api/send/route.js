@@ -65,18 +65,18 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
   const planHtml = Array.isArray(result?.seven_day_plan)
     ? result.seven_day_plan.map(day => `
       <tr><td style="padding:0 0 12px;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:#1e1e1e;">
-          <tr><td style="padding:12px 16px;border-bottom:1px solid #2a2a2a;">
-            <span style="font-size:10px;color:#666;font-family:monospace;letter-spacing:2px;">DAY ${day.day || ''}</span>
-            <strong style="font-size:13px;color:#fff;margin-left:10px;">${day.title || ''}</strong>
-            ${day.focus ? `<span style="font-size:10px;color:#888;margin-left:8px;font-family:monospace;">${day.focus}</span>` : ''}
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#111318;border:1px solid #27272a;border-radius:6px;">
+          <tr><td style="padding:12px 16px;border-bottom:1px solid #27272a;">
+            <span style="font-size:10px;color:#71717a;font-family:'Courier New',monospace;letter-spacing:2px;">DAG ${day.day || ''}</span>
+            <strong style="font-size:13px;color:#ffffff;margin-left:10px;">${day.title || ''}</strong>
+            ${day.focus ? `<span style="font-size:10px;color:#a1a1aa;margin-left:8px;font-family:'Courier New',monospace;">${day.focus}</span>` : ''}
           </td></tr>
           <tr><td style="padding:12px 16px;">
             ${(day.exercises || []).map((ex, i) => `
               <div style="margin-bottom:10px;">
-                <div style="font-size:13px;font-weight:700;color:#fff;">${i + 1}. ${ex.name || ''}</div>
-                ${ex.sets || ex.duration || ex.reps ? `<div style="font-size:11px;color:#888;font-family:monospace;margin:2px 0;">${[ex.sets, ex.reps || ex.duration].filter(Boolean).join(' · ')}</div>` : ''}
-                ${ex.note ? `<div style="font-size:12px;color:#aaa;line-height:1.5;">${ex.note}</div>` : ''}
+                <div style="font-size:13px;font-weight:700;color:#e4e4e7;">${i + 1}. ${ex.name || ''}</div>
+                ${ex.sets || ex.duration || ex.reps ? `<div style="font-size:11px;color:#71717a;font-family:'Courier New',monospace;margin:2px 0;">${[ex.sets, ex.reps || ex.duration].filter(Boolean).join(' · ')}</div>` : ''}
+                ${ex.note ? `<div style="font-size:12px;color:#a1a1aa;line-height:1.5;">${ex.note}</div>` : ''}
               </div>`).join('')}
           </td></tr>
         </table>
@@ -85,109 +85,123 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
 
   const limitationsHtml = Array.isArray(result?.movement_limitations)
     ? result.movement_limitations.map(lim => `
-      <div style="margin-bottom:10px;padding:14px 16px;background:#1e1e1e;border-left:3px solid ${riskColor};">
-        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">${lim.icon || ''} ${lim.name || ''}</div>
-        ${lim.description ? `<div style="font-size:12px;color:#aaa;line-height:1.6;">${lim.description}</div>` : ''}
+      <div style="margin-bottom:10px;padding:14px 16px;background:#111318;border-left:3px solid ${riskColor};border-radius:0 6px 6px 0;">
+        <div style="font-size:13px;font-weight:700;color:#e4e4e7;margin-bottom:4px;">${lim.icon || ''} ${lim.name || ''}</div>
+        ${lim.description ? `<div style="font-size:12px;color:#a1a1aa;line-height:1.6;">${lim.description}</div>` : ''}
       </div>`).join('')
     : '';
 
   const riskFactorsHtml = Array.isArray(result?.risk_factors)
-    ? result.risk_factors.map(r => `<div style="font-size:13px;color:#aaa;padding:6px 0;border-bottom:1px solid #2a2a2a;">• ${r}</div>`).join('')
+    ? result.risk_factors.map(r => `<div style="font-size:13px;color:#a1a1aa;padding:6px 0;border-bottom:1px solid #27272a;">• ${r}</div>`).join('')
     : '';
 
-  // ── Client email (dark theme) ──
+  // ── Client email (dark theme — 9tofit design tokens) ──
   const clientHtml = `<!DOCTYPE html>
 <html lang="nl">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#111;font-family:Arial,Helvetica,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#111;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#09090b;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#09090b;padding:40px 16px;">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
-  <tr><td style="background:#000;padding:24px 28px;border-bottom:3px solid ${riskColor};">
-    <div style="font-size:20px;font-weight:900;letter-spacing:3px;color:#fff;text-transform:uppercase;">9tofit</div>
-    <div style="font-size:8px;letter-spacing:3px;color:#444;text-transform:uppercase;margin-top:2px;">PRESTATIECOACHING</div>
+  <tr><td style="padding:0 0 32px 0;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:4px;color:#ffffff;text-transform:uppercase;">9TOFIT</div>
+    <div style="font-size:8px;letter-spacing:3px;color:#71717a;text-transform:uppercase;margin-top:4px;">PERFORMANCE COACHING</div>
   </td></tr>
 
-  <tr><td style="background:#1a1a1a;padding:28px 28px 20px;">
-    <div style="font-size:10px;letter-spacing:3px;color:#555;text-transform:uppercase;margin-bottom:10px;font-family:monospace;">Bewegingsanalyse Rapport</div>
-    <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:14px;line-height:1;text-transform:uppercase;">Hallo ${name},</div>
-    <div style="font-size:14px;color:#888;line-height:1.7;">Jouw persoonlijke bewegingsanalyse is klaar. Bekijk jouw bewegingsbeperkingen, risicofactoren en het 7-daagse correctieplan hieronder.</div>
+  <tr><td style="padding:0 0 24px 0;">
+    <div style="width:48px;height:3px;background:${riskColor};border-radius:2px;"></div>
   </td></tr>
 
-  <tr><td style="padding:2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0">
+  <tr><td style="padding:0 0 12px 0;">
+    <div style="font-size:10px;letter-spacing:3px;color:${riskColor};text-transform:uppercase;font-family:'Courier New',monospace;">Bewegingsanalyse Rapport</div>
+  </td></tr>
+
+  <tr><td style="padding:0 0 24px 0;">
+    <div style="font-size:32px;font-weight:900;color:#ffffff;line-height:1.05;text-transform:uppercase;letter-spacing:1px;">${name}, jouw<br>analyse is klaar.</div>
+  </td></tr>
+
+  <tr><td style="padding:0 0 28px 0;">
+    <div style="width:100%;height:1px;background:#27272a;"></div>
+  </td></tr>
+
+  <tr><td style="padding:0 0 24px 0;">
+    <div style="font-size:15px;color:#a1a1aa;line-height:1.8;max-width:460px;">Bekijk hieronder jouw bewegingsbeperkingen, risicofactoren en het 7-daagse correctieplan.</div>
+  </td></tr>
+
+  <tr><td style="padding:0 0 2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #27272a;border-radius:8px;">
       <tr>
-        <td style="background:#1a1a1a;padding:16px 28px;border-right:1px solid #2a2a2a;width:33%;">
-          <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:6px;">Risiconiveau</div>
+        <td style="padding:16px 20px;border-right:1px solid #27272a;width:33%;vertical-align:top;">
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:6px;">Risiconiveau</div>
           <div style="font-size:20px;font-weight:900;color:${riskColor};text-transform:uppercase;">${result?.overall_risk || '—'}</div>
         </td>
-        <td style="background:#1a1a1a;padding:16px 28px;border-right:1px solid #2a2a2a;width:33%;">
-          <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:6px;">Probleemgebied</div>
-          <div style="font-size:14px;font-weight:700;color:#fff;">${result?.primary_area || '—'}</div>
+        <td style="padding:16px 20px;border-right:1px solid #27272a;width:33%;vertical-align:top;">
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:6px;">Probleemgebied</div>
+          <div style="font-size:14px;font-weight:700;color:#ffffff;">${result?.primary_area || '—'}</div>
         </td>
-        <td style="background:#1a1a1a;padding:16px 28px;width:33%;">
-          <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:6px;">Pijnscore</div>
-          <div style="font-size:14px;font-weight:700;color:#fff;">${answers?.pain_intensity ?? '—'}/10</div>
+        <td style="padding:16px 20px;width:33%;vertical-align:top;">
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:6px;">Pijnscore</div>
+          <div style="font-size:14px;font-weight:700;color:#ffffff;">${answers?.pain_intensity ?? '—'}/10</div>
         </td>
       </tr>
     </table>
   </td></tr>
 
   ${result?.coach_insight ? `
-  <tr><td style="padding:2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;border-left:3px solid ${riskColor};">
-      <tr><td style="padding:20px 28px;">
-        <div style="font-size:9px;letter-spacing:2px;color:${riskColor};text-transform:uppercase;font-family:monospace;margin-bottom:10px;">Expert Beoordeling</div>
-        <div style="font-size:14px;color:#ddd;line-height:1.8;font-style:italic;">"${result.coach_insight}"</div>
-        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-top:12px;">— Max, 9toFit Bewegingsspecialist</div>
+  <tr><td style="padding:16px 0 2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border-left:3px solid ${riskColor};border-radius:0 8px 8px 0;">
+      <tr><td style="padding:20px 24px;">
+        <div style="font-size:9px;letter-spacing:2px;color:${riskColor};text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:10px;">Expert Beoordeling</div>
+        <div style="font-size:14px;color:#e4e4e7;line-height:1.8;font-style:italic;">"${result.coach_insight}"</div>
+        <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-top:12px;">— Max, 9toFit Bewegingsspecialist</div>
       </td></tr>
     </table>
   </td></tr>` : ''}
 
   ${limitationsHtml ? `
-  <tr><td style="padding:2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;">
-      <tr><td style="padding:20px 28px 10px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:14px;">Bewegingsbeperkingen</div>
+  <tr><td style="padding:16px 0 2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid #27272a;border-radius:8px;">
+      <tr><td style="padding:20px 24px 10px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:14px;">Bewegingsbeperkingen</div>
         ${limitationsHtml}
       </td></tr>
     </table>
   </td></tr>` : ''}
 
   ${riskFactorsHtml ? `
-  <tr><td style="padding:2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;">
-      <tr><td style="padding:20px 28px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:14px;">Risicofactoren</div>
+  <tr><td style="padding:16px 0 2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid #27272a;border-radius:8px;">
+      <tr><td style="padding:20px 24px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:14px;">Risicofactoren</div>
         ${riskFactorsHtml}
       </td></tr>
     </table>
   </td></tr>` : ''}
 
   ${planHtml ? `
-  <tr><td style="padding:2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;">
-      <tr><td style="padding:20px 28px 8px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:14px;">Je 7-Daags Correctieplan</div>
+  <tr><td style="padding:16px 0 2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid #27272a;border-radius:8px;">
+      <tr><td style="padding:20px 24px 8px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:14px;">Je 7-Daags Correctieplan</div>
         <table width="100%" cellpadding="0" cellspacing="0">${planHtml}</table>
       </td></tr>
     </table>
   </td></tr>` : ''}
 
-  <tr><td style="padding:2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff;">
-      <tr><td style="padding:28px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#888;text-transform:uppercase;font-family:monospace;margin-bottom:8px;">Volgende Stap</div>
-        <div style="font-size:22px;font-weight:900;color:#111;text-transform:uppercase;margin-bottom:10px;line-height:1.1;">Boek Je Gratis Strategiegesprek</div>
-        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:20px;">Een 30-minuten sessie met Max geeft je een precieze diagnose en een geacceleerd herstelprotocol speciaal voor jouw situatie.</div>
-        <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#111;color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:14px 28px;text-transform:uppercase;">GRATIS AFSPRAAK MAKEN →</a>
+  <tr><td style="padding:24px 0 0 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid rgba(249,115,22,0.2);border-radius:8px;">
+      <tr><td style="padding:24px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Volgende Stap</div>
+        <div style="font-size:18px;font-weight:900;color:#ffffff;margin-bottom:8px;line-height:1.1;">Boek Je Gratis Strategiegesprek</div>
+        <div style="font-size:13px;color:#a1a1aa;line-height:1.7;margin-bottom:16px;">30 minuten met Max — een precieze diagnose en een geacceleerd herstelprotocol speciaal voor jouw situatie.</div>
+        <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;border-radius:8px;">GRATIS AFSPRAAK MAKEN →</a>
       </td></tr>
     </table>
   </td></tr>
 
-  <tr><td style="padding:24px 0 8px;">
-    <div style="font-size:9px;letter-spacing:2px;color:#333;text-transform:uppercase;font-family:monospace;text-align:center;">9toFit Performance Coaching · 9tofit.nl</div>
+  <tr><td style="padding:32px 0 0 0;">
+    <div style="font-size:9px;letter-spacing:2px;color:#3f3f46;text-transform:uppercase;font-family:'Courier New',monospace;text-align:center;">9toFit Performance Coaching · 9tofit.nl</div>
   </td></tr>
 
 </table>
@@ -392,58 +406,93 @@ async function sendIntakeEmails({ name, email, fromEmail, coachEmail, scanPath, 
   const clientHtml = `<!DOCTYPE html>
 <html lang="nl">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#111;font-family:Arial,Helvetica,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#111;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#09090b;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#09090b;padding:40px 16px;">
 <tr><td align="center">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
 
-  <tr><td style="background:#000;padding:24px 28px;border-bottom:3px solid ${accentColor};">
-    <div style="font-size:20px;font-weight:900;letter-spacing:3px;color:#fff;text-transform:uppercase;">9tofit</div>
-    <div style="font-size:8px;letter-spacing:3px;color:#444;text-transform:uppercase;margin-top:2px;">PRESTATIECOACHING</div>
+  <tr><td style="padding:0 0 32px 0;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:4px;color:#ffffff;text-transform:uppercase;">9TOFIT</div>
+    <div style="font-size:8px;letter-spacing:3px;color:#71717a;text-transform:uppercase;margin-top:4px;">PERFORMANCE COACHING</div>
   </td></tr>
 
-  <tr><td style="background:#1a1a1a;padding:28px 28px 20px;">
-    <div style="font-size:28px;font-weight:900;color:#fff;margin-bottom:14px;line-height:1;">Hallo ${name},</div>
-    <div style="font-size:14px;color:#888;line-height:1.7;">
+  <tr><td style="padding:0 0 24px 0;">
+    <div style="width:48px;height:3px;background:${accentColor};border-radius:2px;"></div>
+  </td></tr>
+
+  <tr><td style="padding:0 0 12px 0;">
+    <div style="font-size:10px;letter-spacing:3px;color:${accentColor};text-transform:uppercase;font-family:'Courier New',monospace;">${isFysio ? 'Fysio Intake' : 'Performance Scan'}</div>
+  </td></tr>
+
+  <tr><td style="padding:0 0 24px 0;">
+    <div style="font-size:32px;font-weight:900;color:#ffffff;line-height:1.05;text-transform:uppercase;letter-spacing:1px;">
+      ${name}, ${isFysio ? 'je intake<br>is ontvangen.' : 'welkom<br>bij 9toFit.'}
+    </div>
+  </td></tr>
+
+  <tr><td style="padding:0 0 28px 0;">
+    <div style="width:100%;height:1px;background:#27272a;"></div>
+  </td></tr>
+
+  <tr><td style="padding:0 0 32px 0;">
+    <div style="font-size:15px;color:#a1a1aa;line-height:1.8;max-width:460px;">
       ${isFysio
-        ? 'Bedankt voor het invullen van je intake! Je coach Max heeft je profiel ontvangen en neemt zo snel mogelijk contact met je op om je persoonlijke trainingsschema te bespreken.'
-        : 'Bedankt voor het invullen van je Performance Scan! Je coach Max heeft je profiel ontvangen en bouwt een trainingsschema op maat. Je ontvangt binnen 24 uur bericht.'
+        ? 'Je profiel is doorgestuurd naar coach Max. Hij neemt zo snel mogelijk contact met je op om je persoonlijke trainingsschema te bespreken.'
+        : 'Je profiel is ontvangen! Coach Max bouwt een persoonlijk trainingsschema op maat. Je ontvangt binnen 24 uur bericht zodra je schema klaarstaat.'
       }
     </div>
   </td></tr>
 
-  <tr><td style="padding:2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#1a1a1a;">
-      <tr><td style="padding:20px 28px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#444;text-transform:uppercase;font-family:monospace;margin-bottom:14px;">Wat nu?</div>
-        <div style="margin-bottom:12px;display:flex;gap:10px;">
-          <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:monospace;">01</span>
-          <span style="font-size:13px;color:#ccc;">Check je inbox voor een magic link om in te loggen in de 9toFit app</span>
-        </div>
-        <div style="margin-bottom:12px;display:flex;gap:10px;">
-          <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:monospace;">02</span>
-          <span style="font-size:13px;color:#ccc;">Je coach bekijkt je profiel en stelt een schema op</span>
-        </div>
-        <div style="display:flex;gap:10px;">
-          <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:monospace;">03</span>
-          <span style="font-size:13px;color:#ccc;">Start met trainen zodra je schema klaarstaat</span>
-        </div>
+  <tr><td style="padding:0 0 36px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:16px 20px;background:#18181b;border:1px solid #27272a;border-radius:8px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:16px;">Wat nu?</div>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr><td style="padding:0 0 12px 0;">
+            <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:'Courier New',monospace;vertical-align:top;">01</span>
+            <span style="font-size:13px;color:#e4e4e7;margin-left:12px;">Check je inbox — je ontvangt een aparte <strong style="color:#fff;">magic link</strong> om direct in te loggen</span>
+          </td></tr>
+          <tr><td style="padding:0 0 12px 0;">
+            <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:'Courier New',monospace;vertical-align:top;">02</span>
+            <span style="font-size:13px;color:#e4e4e7;margin-left:12px;">Je coach bekijkt je profiel en stelt een schema op</span>
+          </td></tr>
+          <tr><td style="padding:0;">
+            <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:'Courier New',monospace;vertical-align:top;">03</span>
+            <span style="font-size:13px;color:#e4e4e7;margin-left:12px;">Start met trainen zodra je schema klaarstaat in de app</span>
+          </td></tr>
+        </table>
       </td></tr>
     </table>
   </td></tr>
 
-  <tr><td style="padding:2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fff;">
-      <tr><td style="padding:28px;">
-        <div style="font-size:22px;font-weight:900;color:#111;text-transform:uppercase;margin-bottom:10px;line-height:1.1;">Wil je sneller starten?</div>
-        <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:20px;">Plan alvast een kennismakingsgesprek met Max zodat hij direct aan de slag kan.</div>
-        <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#111;color:#fff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:14px 28px;text-transform:uppercase;">PLAN GESPREK →</a>
+  <tr><td style="padding:0 0 2px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #27272a;border-radius:8px;">
+      <tr>
+        <td width="50%" style="padding:20px;border-right:1px solid #27272a;vertical-align:top;">
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Toegang</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">14 dagen gratis</div>
+        </td>
+        <td width="50%" style="padding:20px;vertical-align:top;">
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Volgende stap</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">${isFysio ? 'Coach intake' : 'Schema op maat'}</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <tr><td style="padding:24px 0 0 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid rgba(249,115,22,0.2);border-radius:8px;">
+      <tr><td style="padding:24px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Sneller starten?</div>
+        <div style="font-size:18px;font-weight:900;color:#ffffff;margin-bottom:8px;line-height:1.1;">Plan een kennismakingsgesprek</div>
+        <div style="font-size:13px;color:#a1a1aa;line-height:1.7;margin-bottom:16px;">30 minuten met Max — gratis en vrijblijvend.</div>
+        <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;border-radius:8px;">PLAN GESPREK →</a>
       </td></tr>
     </table>
   </td></tr>
 
-  <tr><td style="padding:24px 0 8px;">
-    <div style="font-size:9px;letter-spacing:2px;color:#333;text-transform:uppercase;font-family:monospace;text-align:center;">9toFit Performance Coaching · 9tofit.nl</div>
+  <tr><td style="padding:32px 0 0 0;">
+    <div style="font-size:9px;letter-spacing:2px;color:#3f3f46;text-transform:uppercase;font-family:'Courier New',monospace;text-align:center;">9toFit Performance Coaching · 9tofit.nl</div>
   </td></tr>
 
 </table>
