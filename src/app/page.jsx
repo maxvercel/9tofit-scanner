@@ -582,6 +582,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "pain_performance",
+          lang: locale,
           answers: {
             pain_location: painData.painLocations,
             pain_timing: painData.painTiming,
@@ -608,6 +609,7 @@ export default function App() {
         body: JSON.stringify({
           name: userInfo.name,
           email: userInfo.email,
+          lang: locale,
           result: aiData.result,
           answers: {
             pain_location: painData.painLocations,
@@ -657,6 +659,7 @@ export default function App() {
         body: JSON.stringify({
           name: userInfo.name,
           email: userInfo.email,
+          lang: locale,
           result: null,
           answers: {},
           type: scanPath === "fysio" ? "fysio_intake" : "fitness_intake",

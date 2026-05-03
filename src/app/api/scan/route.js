@@ -42,7 +42,8 @@ export async function POST(request) {
       )
     }
 
-    const { type, answers, userInfo } = await request.json();
+    const { type, answers, userInfo, lang } = await request.json();
+    const isEn = lang === 'en';
 
     // ── Input validation ───
     if (!answers || typeof answers !== 'object') {
@@ -69,47 +70,64 @@ export async function POST(request) {
       )
     }
 
+    const langInstruction = isEn
+      ? `IMPORTANT: All text output must be in English.`
+      : `IMPORTANT: All text output must be in Dutch (Nederlands).`;
+    const langSuffix = isEn ? '- IN ENGLISH' : '- IN DUTCH';
+    const riskLabels = isEn ? 'Low | Moderate | High' : 'Laag | Gemiddeld | Hoog';
+    const urgencyExamples = isEn
+      ? `Short urgency label in English e.g. 'Needs attention' or 'Monitor closely' or 'Address now'`
+      : `Short urgency label in Dutch e.g. 'Aandacht nodig' or 'Goed monitoren' or 'Nu aanpakken'`;
+    const dayTitleExample = isEn
+      ? `Foundation & Assessment`
+      : `Foundation & Assessment (TRANSLATE TO DUTCH - e.g. 'Fundament & Beoordeling')`;
+    const focusExample = isEn
+      ? `Mobility`
+      : `Mobility (TRANSLATE TO DUTCH - e.g. 'Mobiliteit')`;
+    const insightLang = isEn ? 'in English' : 'in Dutch';
+    const titleNote = isEn ? 'ALL DAY TITLES, EXERCISE NAMES, AND NOTES MUST BE IN ENGLISH' : 'ALL DAY TITLES, EXERCISE NAMES, AND NOTES MUST BE IN DUTCH';
+
     const systemPrompt = `You are Max, a specialist in injury rehabilitation and movement correction at 9toFit. You work with busy men (30–55) who have pain affecting their training and daily life.
 
 Based on the assessment answers, generate a detailed, expert movement analysis. Be specific, authoritative and genuinely helpful – this should feel like a real consultation, not a generic response.
 
-IMPORTANT: All text output must be in Dutch (Nederlands).
+${langInstruction}
 
 You MUST return ONLY valid JSON with NO markdown, NO backticks, NO explanation outside the JSON.
 
 Return this exact structure:
 {
-  "headline": "Short impactful headline about their main issue (max 8 words, use *italic* around key phrase) - IN DUTCH",
-  "primary_area": "Main pain location in 1-3 words - IN DUTCH",
-  "overall_risk": "Laag | Gemiddeld | Hoog",
-  "urgency": "Short urgency label in Dutch e.g. 'Aandacht nodig' or 'Goed monitoren' or 'Nu aanpakken'",
+  "headline": "Short impactful headline about their main issue (max 8 words, use *italic* around key phrase) ${langSuffix}",
+  "primary_area": "Main pain location in 1-3 words ${langSuffix}",
+  "overall_risk": "${riskLabels}",
+  "urgency": "${urgencyExamples}",
   "movement_limitations": [
     {
       "icon": "relevant emoji",
-      "name": "Limitation name - IN DUTCH",
-      "description": "2-3 sentence explanation of why this limitation exists and how it impacts daily life and training - IN DUTCH"
+      "name": "Limitation name ${langSuffix}",
+      "description": "2-3 sentence explanation of why this limitation exists and how it impacts daily life and training ${langSuffix}"
     }
   ],
   "risk_factors": [
-    "Risk factor 1 – specific explanation tied to their answers - IN DUTCH",
-    "Risk factor 2 – specific explanation - IN DUTCH",
-    "Risk factor 3 – specific explanation - IN DUTCH"
+    "Risk factor 1 – specific explanation tied to their answers ${langSuffix}",
+    "Risk factor 2 – specific explanation ${langSuffix}",
+    "Risk factor 3 – specific explanation ${langSuffix}"
   ],
-  "coach_insight": "2-3 sentences of direct, expert insight in Dutch. Be specific to their situation. Reference their pain location, work type, and duration. End with one clear priority action.",
+  "coach_insight": "2-3 sentences of direct, expert insight ${insightLang}. Be specific to their situation. Reference their pain location, work type, and duration. End with one clear priority action.",
   "seven_day_plan": [
     {
       "day": 1,
-      "title": "Foundation & Assessment (TRANSLATE TO DUTCH - e.g. 'Fundament & Beoordeling')",
-      "focus": "Mobility (TRANSLATE TO DUTCH - e.g. 'Mobiliteit')",
+      "title": "${dayTitleExample}",
+      "focus": "${focusExample}",
       "exercises": [
         {
-          "name": "Exercise name - IN DUTCH",
+          "name": "Exercise name ${langSuffix}",
           "sets": "3 sets",
           "duration": "45 seconds",
-          "note": "How to perform it and what to feel - IN DUTCH"
+          "note": "How to perform it and what to feel ${langSuffix}"
         }
       ],
-      "note": "Optional day note or progression tip - IN DUTCH"
+      "note": "Optional day note or progression tip ${langSuffix}"
     }
   ]
 }
@@ -123,7 +141,7 @@ Rules for the 7-day plan:
 - Each exercise must be specific to their pain location
 - Include sets/duration AND a coaching note for each exercise
 - Progress appropriately based on their training history and pain intensity
-- ALL DAY TITLES, EXERCISE NAMES, AND NOTES MUST BE IN DUTCH
+- ${titleNote}
 
 Rules for risk assessment:
 - High risk: pain intensity 7+, duration over 3 months, no treatment, high-impact triggers
