@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useT, useLocale } from "../lib/i18n";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -417,6 +418,17 @@ export default function App() {
   const [phase, setPhase] = useState("landing");
   const [step, setStep] = useState(0);
 
+  // i18n
+  const t = useT();
+  const locale = useLocale();
+
+  // Sync <html lang="..."> with current locale for SEO and a11y.
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = locale === "en" ? "en-US" : "nl-NL";
+    }
+  }, [locale]);
+
   // Scan path: 'fysio' | 'fitness' | 'pain'
   const [scanPath, setScanPath] = useState("");
 
@@ -755,41 +767,36 @@ export default function App() {
             <div className="landing">
               <div className="landing-kicker">
                 <span className="kicker-line" />
-                Gratis Performance Scan
+                {t('Gratis Performance Scan')}
               </div>
               <h1 className="landing-h1">
-                Ontdek wat jouw
+                {t('Ontdek wat jouw')}
                 <br />
-                lichaam <em>nodig heeft.</em>
+                {t('lichaam')} <em>{t('nodig heeft.')}</em>
               </h1>
               <p className="landing-sub">
-                Of je nu sterker wilt worden, pijn wilt verhelpen, of doorgestuurd
-                bent door een fysiotherapeut — deze scan geeft jouw coach een
-                compleet beeld. In minder dan 3 minuten.
+                {t('Of je nu sterker wilt worden, pijn wilt verhelpen, of doorgestuurd bent door een fysiotherapeut — deze scan geeft jouw coach een compleet beeld. In minder dan 3 minuten.')}
               </p>
               <div className="landing-pillars">
                 <div className="pillar">
                   <div className="pillar-num">01</div>
-                  <div className="pillar-title">Persoonlijk Profiel</div>
+                  <div className="pillar-title">{t('Persoonlijk Profiel')}</div>
                   <div className="pillar-desc">
-                    Leeftijd, ervaring, doelen en situatie — alles wat je coach
-                    moet weten.
+                    {t('Leeftijd, ervaring, doelen en situatie — alles wat je coach moet weten.')}
                   </div>
                 </div>
                 <div className="pillar">
                   <div className="pillar-num">02</div>
-                  <div className="pillar-title">Pijn of Klachten?</div>
+                  <div className="pillar-title">{t('Pijn of Klachten?')}</div>
                   <div className="pillar-desc">
-                    Heb je klachten? Dan krijg je direct een persoonlijke bewegingsanalyse
-                    en correctief plan.
+                    {t('Heb je klachten? Dan krijg je direct een persoonlijke bewegingsanalyse en correctief plan.')}
                   </div>
                 </div>
                 <div className="pillar">
                   <div className="pillar-num">03</div>
-                  <div className="pillar-title">Coach Op Maat</div>
+                  <div className="pillar-title">{t('Coach Op Maat')}</div>
                   <div className="pillar-desc">
-                    Je coach bouwt een schema op basis van jouw unieke profiel.
-                    Geen standaard templates.
+                    {t('Je coach bouwt een schema op basis van jouw unieke profiel. Geen standaard templates.')}
                   </div>
                 </div>
               </div>
@@ -798,10 +805,10 @@ export default function App() {
                   className="cta-btn"
                   onClick={() => setPhase("path_select")}
                 >
-                  Start Je Scan <span>→</span>
+                  {t('Start Je Scan')} <span>→</span>
                 </button>
                 <span className="cta-note">
-                  Gratis · 3 minuten · Geen account nodig
+                  {t('Gratis · 3 minuten · Geen account nodig')}
                 </span>
               </div>
             </div>
@@ -810,20 +817,19 @@ export default function App() {
           {/* ═══════ PATH SELECTION ═══════ */}
           {phase === "path_select" && (
             <div className="step-container">
-              <div className="step-title">Welkom bij 9toFit</div>
-              <div className="step-sub">Wat brengt je hier vandaag?</div>
+              <div className="step-title">{t('Welkom bij 9toFit')}</div>
+              <div className="step-sub">{t('Wat brengt je hier vandaag?')}</div>
 
               <button
                 className="path-card fysio"
                 onClick={() => handlePathSelect("fysio")}
               >
                 <span className="path-icon">🤝</span>
-                <div className="path-title">Fysio doorverwijzing</div>
+                <div className="path-title">{t('Fysio doorverwijzing')}</div>
                 <div className="path-desc">
-                  Doorgestuurd door je fysiotherapeut — klachtenvrij en klaar om
-                  te trainen.
+                  {t('Doorgestuurd door je fysiotherapeut — klachtenvrij en klaar om te trainen.')}
                 </div>
-                <span className="path-tag blue">Intake · Coach bouwt schema</span>
+                <span className="path-tag blue">{t('Intake · Coach bouwt schema')}</span>
               </button>
 
               <button
@@ -831,13 +837,12 @@ export default function App() {
                 onClick={() => handlePathSelect("fitness")}
               >
                 <span className="path-icon">💪</span>
-                <div className="path-title">Fitter & sterker worden</div>
+                <div className="path-title">{t('Fitter & sterker worden')}</div>
                 <div className="path-desc">
-                  Geen klachten — je wilt trainen met een persoonlijk schema op
-                  maat.
+                  {t('Geen klachten — je wilt trainen met een persoonlijk schema op maat.')}
                 </div>
                 <span className="path-tag green">
-                  Coach bouwt schema op maat
+                  {t('Coach bouwt schema op maat')}
                 </span>
               </button>
 
@@ -846,19 +851,18 @@ export default function App() {
                 onClick={() => handlePathSelect("pain")}
               >
                 <span className="path-icon">🩹</span>
-                <div className="path-title">Pijn of klachten</div>
+                <div className="path-title">{t('Pijn of klachten')}</div>
                 <div className="path-desc">
-                  Terugkerende blessures, stijfheid of pijn die je training
-                  belemmert.
+                  {t('Terugkerende blessures, stijfheid of pijn die je training belemmert.')}
                 </div>
                 <span className="path-tag orange">
-                  Persoonlijke bewegingsanalyse · Correctief plan
+                  {t('Persoonlijke bewegingsanalyse · Correctief plan')}
                 </span>
               </button>
 
               <div style={{ marginTop: "16px" }}>
                 <button className="back-btn" onClick={() => setPhase("landing")}>
-                  ← Terug
+                  {t('← Terug')}
                 </button>
               </div>
             </div>
@@ -870,14 +874,14 @@ export default function App() {
               <div className="progress-wrap">
                 <div className="progress-top">
                   <span className="progress-label">
-                    Stap {step + 1} van {totalSteps}
+                    {t('Stap')} {step + 1} {t('van')} {totalSteps}
                   </span>
                   <span className="progress-label">
                     {scanPath === "pain"
-                      ? "Pijn & Prestatie Scan"
+                      ? t("Pijn & Prestatie Scan")
                       : scanPath === "fysio"
-                      ? "Fysio Intake"
-                      : "Performance Scan"}
+                      ? t("Fysio Intake")
+                      : t("Performance Scan")}
                   </span>
                 </div>
                 <div className="progress-bar">
@@ -893,17 +897,16 @@ export default function App() {
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
                   {scanPath === "fysio" && data.referralSource && (
                     <div className="fysio-notice">
-                      Doorgestuurd door je fysiotherapeut — je profiel is al
-                      voorbereid.
+                      {t('Doorgestuurd door je fysiotherapeut — je profiel is al voorbereid.')}
                     </div>
                   )}
-                  <div className="step-label">Over jou</div>
-                  <div className="step-title">Vertel ons over jezelf</div>
+                  <div className="step-label">{t('Over jou')}</div>
+                  <div className="step-title">{t('Vertel ons over jezelf')}</div>
                   <div className="step-sub">
-                    Dit helpt je coach om het perfecte schema te bouwen.
+                    {t('Dit helpt je coach om het perfecte schema te bouwen.')}
                   </div>
 
-                  <div className="section-label">Leeftijd</div>
+                  <div className="section-label">{t('Leeftijd')}</div>
                   <div className="pill-grid">
                     {AGE_RANGES.map((a) => (
                       <button
@@ -911,12 +914,12 @@ export default function App() {
                         className={`pill-btn ${data.ageRange === a.id ? "selected" : ""}`}
                         onClick={() => setData((d) => ({ ...d, ageRange: a.id }))}
                       >
-                        {a.label}
+                        {t(a.label)}
                       </button>
                     ))}
                   </div>
 
-                  <div className="section-label">Trainingsachtergrond</div>
+                  <div className="section-label">{t('Trainingsachtergrond')}</div>
                   <div className="options-grid">
                     {TRAINING_BACKGROUNDS.map((bg) => (
                       <button
@@ -927,7 +930,7 @@ export default function App() {
                         }
                       >
                         <span className="option-icon">{bg.icon}</span>
-                        <span className="option-label">{bg.label}</span>
+                        <span className="option-label">{t(bg.label)}</span>
                         <span className="option-check">✓</span>
                       </button>
                     ))}
@@ -935,14 +938,14 @@ export default function App() {
 
                   <div className="nav-row">
                     <button className="back-btn" onClick={prevStep}>
-                      ← Terug
+                      {t('← Terug')}
                     </button>
                     <button
                       className="next-btn"
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      Volgende →
+                      {t('Volgende →')}
                     </button>
                   </div>
                 </div>
@@ -951,10 +954,10 @@ export default function App() {
               {/* ── STEP: Goals ── */}
               {currentStepId === "goals" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
-                  <div className="step-label">Doelen & Motivatie</div>
-                  <div className="step-title">Wat wil je bereiken?</div>
+                  <div className="step-label">{t('Doelen & Motivatie')}</div>
+                  <div className="step-title">{t('Wat wil je bereiken?')}</div>
                   <div className="step-sub">
-                    Selecteer alles wat van toepassing is.
+                    {t('Selecteer alles wat van toepassing is.')}
                   </div>
 
                   <div className="options-grid">
@@ -972,7 +975,7 @@ export default function App() {
                           }
                         >
                           <span className="option-icon">{g.icon}</span>
-                          <span className="option-label">{g.label}</span>
+                          <span className="option-label">{t(g.label)}</span>
                           <span className="option-check">✓</span>
                         </button>
                       );
@@ -980,31 +983,30 @@ export default function App() {
                   </div>
 
                   <div className="section-label">
-                    Wat wil je het komende jaar bereiken?
+                    {t('Wat wil je het komende jaar bereiken?')}
                   </div>
                   <textarea
                     className="text-area"
-                    placeholder="Bijv. 'Pijnvrij 3x per week trainen', 'Weer een marathon lopen', '10 kg afvallen en sterker worden'…"
+                    placeholder={t("Bijv. 'Pijnvrij 3x per week trainen', 'Weer een marathon lopen', '10 kg afvallen en sterker worden'…")}
                     value={data.yearGoalText}
                     onChange={(e) =>
                       setData((d) => ({ ...d, yearGoalText: e.target.value }))
                     }
                   />
                   <div className="text-hint">
-                    Optioneel — maar hoe specifieker, hoe beter je coach je kan
-                    helpen.
+                    {t('Optioneel — maar hoe specifieker, hoe beter je coach je kan helpen.')}
                   </div>
 
                   <div className="nav-row">
                     <button className="back-btn" onClick={prevStep}>
-                      ← Terug
+                      {t('← Terug')}
                     </button>
                     <button
                       className="next-btn"
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      Volgende →
+                      {t('Volgende →')}
                     </button>
                   </div>
                 </div>
@@ -1013,16 +1015,15 @@ export default function App() {
               {/* ── STEP: Situation ── */}
               {currentStepId === "situation" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
-                  <div className="step-label">Jouw Situatie</div>
+                  <div className="step-label">{t('Jouw Situatie')}</div>
                   <div className="step-title">
-                    Hoe ziet jouw dag en week eruit?
+                    {t('Hoe ziet jouw dag en week eruit?')}
                   </div>
                   <div className="step-sub">
-                    Je werksituatie en beschikbaarheid bepalen de opbouw van je
-                    schema.
+                    {t('Je werksituatie en beschikbaarheid bepalen de opbouw van je schema.')}
                   </div>
 
-                  <div className="section-label">Werksituatie</div>
+                  <div className="section-label">{t('Werksituatie')}</div>
                   <div className="options-grid">
                     {WORK_SITUATIONS.map((w) => (
                       <button
@@ -1033,14 +1034,14 @@ export default function App() {
                         }
                       >
                         <span className="option-icon">{w.icon}</span>
-                        <span className="option-label">{w.label}</span>
-                        <span className="option-sub">{w.sub}</span>
+                        <span className="option-label">{t(w.label)}</span>
+                        <span className="option-sub">{t(w.sub)}</span>
                         <span className="option-check">✓</span>
                       </button>
                     ))}
                   </div>
 
-                  <div className="section-label">Werkuren per week</div>
+                  <div className="section-label">{t('Werkuren per week')}</div>
                   <div className="pill-grid">
                     {WORK_HOURS.map((h) => (
                       <button
@@ -1050,12 +1051,12 @@ export default function App() {
                           setData((d) => ({ ...d, workHoursPerWeek: h.id }))
                         }
                       >
-                        {h.label}
+                        {t(h.label)}
                       </button>
                     ))}
                   </div>
 
-                  <div className="section-label">Heb je kinderen?</div>
+                  <div className="section-label">{t('Heb je kinderen?')}</div>
                   <div className="pill-grid">
                     <button
                       className={`pill-btn ${data.hasChildren === false ? "selected" : ""}`}
@@ -1063,7 +1064,7 @@ export default function App() {
                         setData((d) => ({ ...d, hasChildren: false, childrenCount: 0 }))
                       }
                     >
-                      Nee
+                      {t('Nee')}
                     </button>
                     <button
                       className={`pill-btn ${data.hasChildren === true ? "selected" : ""}`}
@@ -1071,12 +1072,12 @@ export default function App() {
                         setData((d) => ({ ...d, hasChildren: true, childrenCount: d.childrenCount || 1 }))
                       }
                     >
-                      Ja
+                      {t('Ja')}
                     </button>
                   </div>
                   {data.hasChildren && (
                     <>
-                      <div className="section-label">Hoeveel kinderen?</div>
+                      <div className="section-label">{t('Hoeveel kinderen?')}</div>
                       <div className="pill-grid">
                         {[1, 2, 3, 4, 5].map((n) => (
                           <button
@@ -1094,7 +1095,7 @@ export default function App() {
                   )}
 
                   <div className="section-label">
-                    Hoeveel dagen per week kun je trainen?
+                    {t('Hoeveel dagen per week kun je trainen?')}
                   </div>
                   <div className="pill-grid">
                     {TRAINING_DAYS.map((d) => (
@@ -1108,12 +1109,12 @@ export default function App() {
                           }))
                         }
                       >
-                        {d} dagen
+                        {d} {t('dagen')}
                       </button>
                     ))}
                   </div>
 
-                  <div className="section-label">Wanneer wil je starten?</div>
+                  <div className="section-label">{t('Wanneer wil je starten?')}</div>
                   <div className="pill-grid">
                     {START_URGENCIES.map((u) => (
                       <button
@@ -1123,21 +1124,21 @@ export default function App() {
                           setData((d) => ({ ...d, startUrgency: u.id }))
                         }
                       >
-                        {u.label}
+                        {t(u.label)}
                       </button>
                     ))}
                   </div>
 
                   <div className="nav-row">
                     <button className="back-btn" onClick={prevStep}>
-                      ← Terug
+                      {t('← Terug')}
                     </button>
                     <button
                       className="next-btn"
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      {scanPath === "pain" ? "Volgende →" : "Verder →"}
+                      {scanPath === "pain" ? t('Volgende →') : t('Verder →')}
                     </button>
                   </div>
                 </div>
@@ -1146,12 +1147,12 @@ export default function App() {
               {/* ── STEP: Pain Location + Timing ── */}
               {currentStepId === "pain_location" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
-                  <div className="step-label">Pijnanalyse</div>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
                   <div className="step-title">
-                    Waar ervaar je pijn of ongemak?
+                    {t('Waar ervaar je pijn of ongemak?')}
                   </div>
                   <div className="step-sub">
-                    Selecteer alle gebieden die van toepassing zijn.
+                    {t('Selecteer alle gebieden die van toepassing zijn.')}
                   </div>
 
                   <div className="options-grid">
@@ -1169,8 +1170,8 @@ export default function App() {
                           }
                         >
                           <span className="option-icon">{loc.icon}</span>
-                          <span className="option-label">{loc.label}</span>
-                          <span className="option-sub">{loc.sub}</span>
+                          <span className="option-label">{t(loc.label)}</span>
+                          <span className="option-sub">{t(loc.sub)}</span>
                           <span className="option-check">✓</span>
                         </button>
                       );
@@ -1178,20 +1179,20 @@ export default function App() {
                   </div>
 
                   <div className="section-label" style={{ marginTop: "28px" }}>
-                    Wanneer heb je de meeste last?
+                    {t('Wanneer heb je de meeste last?')}
                   </div>
                   <div className="options-grid">
-                    {PAIN_TIMINGS.map((t) => (
+                    {PAIN_TIMINGS.map((pt) => (
                       <button
-                        key={t.id}
-                        className={`option-card ${painData.painTiming === t.id ? "selected" : ""}`}
+                        key={pt.id}
+                        className={`option-card ${painData.painTiming === pt.id ? "selected" : ""}`}
                         onClick={() =>
-                          setPainData((d) => ({ ...d, painTiming: t.id }))
+                          setPainData((d) => ({ ...d, painTiming: pt.id }))
                         }
                       >
-                        <span className="option-icon">{t.icon}</span>
-                        <span className="option-label">{t.label}</span>
-                        <span className="option-sub">{t.sub}</span>
+                        <span className="option-icon">{pt.icon}</span>
+                        <span className="option-label">{t(pt.label)}</span>
+                        <span className="option-sub">{t(pt.sub)}</span>
                         <span className="option-check">✓</span>
                       </button>
                     ))}
@@ -1199,14 +1200,14 @@ export default function App() {
 
                   <div className="nav-row">
                     <button className="back-btn" onClick={prevStep}>
-                      ← Terug
+                      {t('← Terug')}
                     </button>
                     <button
                       className="next-btn"
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      Volgende →
+                      {t('Volgende →')}
                     </button>
                   </div>
                 </div>
@@ -1215,16 +1216,16 @@ export default function App() {
               {/* ── STEP: Pain Details (intensity + duration) ── */}
               {currentStepId === "pain_details" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
-                  <div className="step-label">Pijnanalyse</div>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
                   <div className="step-title">
-                    Hoe erg en hoe lang heb je last?
+                    {t('Hoe erg en hoe lang heb je last?')}
                   </div>
                   <div className="step-sub">
-                    Dit bepaalt de aanpak en urgentie van je plan.
+                    {t('Dit bepaalt de aanpak en urgentie van je plan.')}
                   </div>
 
                   <div className="section-label">
-                    Gemiddeld pijnniveau (1–10)
+                    {t('Gemiddeld pijnniveau (1–10)')}
                   </div>
                   <div className="scale-row">
                     {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
@@ -1240,11 +1241,11 @@ export default function App() {
                     ))}
                   </div>
                   <div className="scale-labels">
-                    <span>Licht ongemak</span>
-                    <span>Ondraaglijk</span>
+                    <span>{t('Licht ongemak')}</span>
+                    <span>{t('Ondraaglijk')}</span>
                   </div>
 
-                  <div className="section-label">Hoe lang heb je al last?</div>
+                  <div className="section-label">{t('Hoe lang heb je al last?')}</div>
                   <div className="options-grid">
                     {PAIN_DURATIONS.map((pd) => (
                       <button
@@ -1255,8 +1256,8 @@ export default function App() {
                         }
                       >
                         <span className="option-icon">{pd.icon}</span>
-                        <span className="option-label">{pd.label}</span>
-                        <span className="option-sub">{pd.sub}</span>
+                        <span className="option-label">{t(pd.label)}</span>
+                        <span className="option-sub">{t(pd.sub)}</span>
                         <span className="option-check">✓</span>
                       </button>
                     ))}
@@ -1264,14 +1265,14 @@ export default function App() {
 
                   <div className="nav-row">
                     <button className="back-btn" onClick={prevStep}>
-                      ← Terug
+                      {t('← Terug')}
                     </button>
                     <button
                       className="next-btn"
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      Volgende →
+                      {t('Volgende →')}
                     </button>
                   </div>
                 </div>
@@ -1280,12 +1281,12 @@ export default function App() {
               {/* ── STEP: Pain Triggers ── */}
               {currentStepId === "pain_triggers" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
-                  <div className="step-label">Pijnanalyse</div>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
                   <div className="step-title">
-                    Welke bewegingen verergeren de pijn?
+                    {t('Welke bewegingen verergeren de pijn?')}
                   </div>
                   <div className="step-sub">
-                    Selecteer alles wat van toepassing is.
+                    {t('Selecteer alles wat van toepassing is.')}
                   </div>
 
                   <div className="options-grid">
@@ -1303,8 +1304,8 @@ export default function App() {
                           }
                         >
                           <span className="option-icon">{tr.icon}</span>
-                          <span className="option-label">{tr.label}</span>
-                          <span className="option-sub">{tr.sub}</span>
+                          <span className="option-label">{t(tr.label)}</span>
+                          <span className="option-sub">{t(tr.sub)}</span>
                           <span className="option-check">✓</span>
                         </button>
                       );
@@ -1313,14 +1314,14 @@ export default function App() {
 
                   <div className="nav-row">
                     <button className="back-btn" onClick={prevStep}>
-                      ← Terug
+                      {t('← Terug')}
                     </button>
                     <button
                       className="next-btn"
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      Bekijk Mijn Analyse →
+                      {t('Bekijk Mijn Analyse →')}
                     </button>
                   </div>
                 </div>
@@ -1333,64 +1334,64 @@ export default function App() {
             <div className="gate">
               <div className="gate-box">
                 <div className="gate-eyebrow">
-                  Scan voltooid —{" "}
+                  {t('Scan voltooid')} —{" "}
                   {scanPath === "pain"
-                    ? "Pijn & Prestatie Analyse"
+                    ? t("Pijn & Prestatie Analyse")
                     : scanPath === "fysio"
-                    ? "Fysio Intake"
-                    : "Performance Profiel"}
+                    ? t("Fysio Intake")
+                    : t("Performance Profiel")}
                 </div>
                 <div className="gate-title">
                   {scanPath === "pain" ? (
                     <>
-                      Je rapport is klaar.
+                      {t('Je rapport is klaar.')}
                       <br />
-                      Waar moeten we het naartoe sturen?
+                      {t('Waar moeten we het naartoe sturen?')}
                     </>
                   ) : (
                     <>
-                      Nog één stap.
+                      {t('Nog één stap.')}
                       <br />
-                      Hoe kunnen we je bereiken?
+                      {t('Hoe kunnen we je bereiken?')}
                     </>
                   )}
                 </div>
                 <div className="gate-sub">
                   {scanPath === "pain"
-                    ? "Vul je gegevens in om je persoonlijke bewegingsanalyse en 7-daags correctief plan direct via e-mail te ontvangen."
-                    : "Je coach ontvangt je volledige profiel en neemt binnen 24 uur contact met je op om je schema te bespreken."}
+                    ? t('Vul je gegevens in om je persoonlijke bewegingsanalyse en 7-daags correctief plan direct via e-mail te ontvangen.')
+                    : t('Je coach ontvangt je volledige profiel en neemt binnen 24 uur contact met je op om je schema te bespreken.')}
                 </div>
 
                 {error && (
                   <div className="gate-error">
-                    ⚠ {error} — probeer het opnieuw
+                    ⚠ {error} — {t('probeer het opnieuw')}
                   </div>
                 )}
 
                 {scanPath === "pain" && (
                   <div className="gate-preview">
                     <div className="preview-pill">
-                      Bewegingsbeperkingen: geïdentificeerd
+                      {t('Bewegingsbeperkingen: geïdentificeerd')}
                     </div>
                     <div className="preview-pill">
-                      Risico Niveau: geanalyseerd
+                      {t('Risico Niveau: geanalyseerd')}
                     </div>
                     <div className="preview-pill">
-                      7-Daags Plan: gegenereerd
+                      {t('7-Daags Plan: gegenereerd')}
                     </div>
                     <div className="preview-pill">
-                      Expert Beoordeling: gereed
+                      {t('Expert Beoordeling: gereed')}
                     </div>
                   </div>
                 )}
 
                 <div className="gate-fields">
                   <div className="field-wrap">
-                    <label className="field-label">Voornaam</label>
+                    <label className="field-label">{t('Voornaam')}</label>
                     <input
                       className="field-input"
                       type="text"
-                      placeholder="Jan"
+                      placeholder={t('Jan')}
                       value={userInfo.name}
                       onChange={(e) =>
                         setUserInfo((p) => ({ ...p, name: e.target.value }))
@@ -1398,11 +1399,11 @@ export default function App() {
                     />
                   </div>
                   <div className="field-wrap">
-                    <label className="field-label">E-mailadres</label>
+                    <label className="field-label">{t('E-mailadres')}</label>
                     <input
                       className="field-input"
                       type="email"
-                      placeholder="jan@voorbeeld.nl"
+                      placeholder={t('jan@voorbeeld.nl')}
                       value={userInfo.email}
                       onChange={(e) =>
                         setUserInfo((p) => ({ ...p, email: e.target.value }))
@@ -1419,7 +1420,7 @@ export default function App() {
                             letterSpacing: "0.5px",
                           }}
                         >
-                          Check je emailadres — dit lijkt niet geldig
+                          {t('Check je emailadres — dit lijkt niet geldig')}
                         </div>
                       )}
                   </div>
@@ -1428,12 +1429,12 @@ export default function App() {
                 {scanPath === "fysio" && (
                   <div className="field-wrap" style={{ marginBottom: "18px" }}>
                     <label className="field-label">
-                      Naam fysiotherapeut / praktijk (optioneel)
+                      {t('Naam fysiotherapeut / praktijk (optioneel)')}
                     </label>
                     <input
                       className="field-input"
                       type="text"
-                      placeholder="Bijv. FysioFit Amsterdam"
+                      placeholder={t('Bijv. FysioFit Amsterdam')}
                       value={data.referralSource || ""}
                       onChange={(e) =>
                         setData((d) => ({
@@ -1456,15 +1457,15 @@ export default function App() {
                   }
                 >
                   {submitting
-                    ? "Bezig met versturen…"
+                    ? t('Bezig met versturen…')
                     : scanPath === "pain"
-                    ? "Analyseer Mijn Beweging →"
-                    : "Verstuur Naar Mijn Coach →"}
+                    ? t('Analyseer Mijn Beweging →')
+                    : t('Verstuur Naar Mijn Coach →')}
                 </button>
                 <div className="submit-note">
                   {scanPath === "pain"
-                    ? "Je resultaten worden direct gemaild · Geen spam, ooit"
-                    : "Je coach ontvangt je volledige profiel · Geen spam, ooit"}
+                    ? t('Je resultaten worden direct gemaild · Geen spam, ooit')
+                    : t('Je coach ontvangt je volledige profiel · Geen spam, ooit')}
                 </div>
               </div>
             </div>
@@ -1475,10 +1476,10 @@ export default function App() {
             <div className="analyzing">
               <div className="analyzing-spinner" />
               <div className="analyzing-title">
-                Je bewegingsprofiel analyseren…
+                {t('Je bewegingsprofiel analyseren…')}
               </div>
               <div className="analyzing-sub">
-                Je persoonlijke rapport opbouwen
+                {t('Je persoonlijke rapport opbouwen')}
               </div>
               <div className="analyzing-steps">
                 {ANALYZE_STEPS.map((s, i) => (
@@ -1488,7 +1489,7 @@ export default function App() {
                     style={{ animationDelay: `${i * 0.12}s` }}
                   >
                     {analyzeStep > i ? "✓ " : "○ "}
-                    {s}
+                    {t(s)}
                   </div>
                 ))}
               </div>
@@ -1500,7 +1501,7 @@ export default function App() {
             <div className="result">
               <div className="result-hero">
                 <div className="result-eyebrow">
-                  Pijn & Prestatie Rapport · {userInfo.name}
+                  {t('Pijn & Prestatie Rapport')} · {userInfo.name}
                 </div>
                 <div className="result-name">
                   {result.headline ? (
@@ -1514,9 +1515,9 @@ export default function App() {
                     />
                   ) : (
                     <>
-                      Bewegingsanalyse
+                      {t('Bewegingsanalyse')}
                       <br />
-                      voltooid voor <em>{userInfo.name}</em>
+                      {t('voltooid voor')} <em>{userInfo.name}</em>
                     </>
                   )}
                 </div>
@@ -1525,12 +1526,12 @@ export default function App() {
                     <span
                       className={`risk-tag ${getRiskClass(result.overall_risk)}`}
                     >
-                      Risico: {result.overall_risk}
+                      {t('Risico:')} {result.overall_risk}
                     </span>
                   )}
                   {result.primary_area && (
                     <span className="risk-tag risk-neutral">
-                      Primair: {result.primary_area}
+                      {t('Primair:')} {result.primary_area}
                     </span>
                   )}
                   {result.urgency && (
@@ -1546,7 +1547,7 @@ export default function App() {
                 <div className="r-sec-head">
                   <span className="r-sec-num">01</span>
                   <span className="r-sec-title">
-                    Geïdentificeerde Bewegingsbeperkingen
+                    {t('Geïdentificeerde Bewegingsbeperkingen')}
                   </span>
                 </div>
                 <div className="r-sec-body">
@@ -1571,7 +1572,7 @@ export default function App() {
                   ) : (
                     <p>
                       {result.movement_limitations_text ||
-                        "Zie gedetailleerde analyse in je e-mail."}
+                        t('Zie gedetailleerde analyse in je e-mail.')}
                     </p>
                   )}
                 </div>
@@ -1581,7 +1582,7 @@ export default function App() {
               <div className="r-section" style={{ marginTop: "2px" }}>
                 <div className="r-sec-head">
                   <span className="r-sec-num">02</span>
-                  <span className="r-sec-title">Risicofactor Analyse</span>
+                  <span className="r-sec-title">{t('Risicofactor Analyse')}</span>
                 </div>
                 <div className="r-sec-body">
                   {riskFactors.length > 0
@@ -1609,7 +1610,7 @@ export default function App() {
                     >
                       →
                     </span>
-                    <span className="r-sec-title">Expert Beoordeling</span>
+                    <span className="r-sec-title">{t('Expert Beoordeling')}</span>
                   </div>
                   <div className="insight-body">
                     <div className="insight-text">
@@ -1625,7 +1626,7 @@ export default function App() {
                   <div className="r-sec-head">
                     <span className="r-sec-num">03</span>
                     <span className="r-sec-title">
-                      Je 7-Daags Correctief Plan
+                      {t('Je 7-Daags Correctief Plan')}
                     </span>
                   </div>
                   <div className="r-sec-body" style={{ padding: "16px" }}>
@@ -1642,10 +1643,10 @@ export default function App() {
                             }
                           >
                             <span className="plan-day-num">
-                              Dag {day.day || i + 1}
+                              {t('Dag')} {day.day || i + 1}
                             </span>
                             <span className="plan-day-title">
-                              {day.title || day.theme || `Dag ${i + 1}`}
+                              {day.title || day.theme || `${t('Dag')} ${i + 1}`}
                             </span>
                             {day.focus && (
                               <span className="plan-day-focus">
@@ -1698,15 +1699,13 @@ export default function App() {
                 <div className="call-block">
                   <div>
                     <div className="call-eyebrow">
-                      Aanbevolen volgende stap
+                      {t('Aanbevolen volgende stap')}
                     </div>
                     <div className="call-title">
-                      Boek een Gratis Strategiegesprek
+                      {t('Boek een Gratis Strategiegesprek')}
                     </div>
                     <div className="call-desc">
-                      Op basis van jouw profiel zou een 30-minuten sessie met
-                      Max je een precieze diagnose geven en een
-                      versnellingsprotocol gericht op jouw lichaam en leefstijl.
+                      {t('Op basis van jouw profiel zou een 30-minuten sessie met Max je een precieze diagnose geven en een versnellingsprotocol gericht op jouw lichaam en leefstijl.')}
                     </div>
                   </div>
                   <a
@@ -1715,7 +1714,7 @@ export default function App() {
                     rel="noopener noreferrer"
                     className="call-btn"
                   >
-                    Boek Gratis Gesprek →
+                    {t('Boek Gratis Gesprek →')}
                   </a>
                 </div>
               )}
@@ -1723,11 +1722,11 @@ export default function App() {
               <div className={`email-bar ${emailSent ? "sent" : ""}`}>
                 <span className="email-dot" />
                 {emailSent
-                  ? `Volledig rapport verzonden naar ${userInfo.email}`
-                  : "Je rapport via e-mail versturen…"}
+                  ? `${t('Volledig rapport verzonden naar')} ${userInfo.email}`
+                  : t('Je rapport via e-mail versturen…')}
               </div>
               <button className="restart-btn" onClick={reset}>
-                ← Nieuwe Scan Starten
+                {t('← Nieuwe Scan Starten')}
               </button>
             </div>
           )}
@@ -1740,35 +1739,33 @@ export default function App() {
               </div>
               <div className="success-title">
                 {scanPath === "fysio"
-                  ? "Je intake is ontvangen!"
-                  : "Je profiel is verzonden!"}
+                  ? t('Je intake is ontvangen!')
+                  : t('Je profiel is verzonden!')}
               </div>
               <div className="success-sub">
                 {scanPath === "fysio"
-                  ? "Je coach Max ontvangt nu je volledige profiel en neemt zo snel mogelijk contact met je op om je programma te bespreken."
-                  : "Je coach Max heeft je profiel ontvangen en bouwt een schema op maat. Je ontvangt binnen 24 uur bericht."}
+                  ? t('Je coach Max ontvangt nu je volledige profiel en neemt zo snel mogelijk contact met je op om je programma te bespreken.')
+                  : t('Je coach Max heeft je profiel ontvangen en bouwt een schema op maat. Je ontvangt binnen 24 uur bericht.')}
               </div>
               <div className="success-steps">
                 <div className="success-step">
                   <span className="success-step-num">01</span>
                   <div className="success-step-text">
-                    Check je inbox — je ontvangt een magic link om direct in te
-                    loggen in de 9toFit app.
+                    {t('Check je inbox — je ontvangt een magic link om direct in te loggen in de 9toFit app.')}
                   </div>
                 </div>
                 <div className="success-step">
                   <span className="success-step-num">02</span>
                   <div className="success-step-text">
-                    Kies je pakket in de app — je coach gaat dan direct aan de
-                    slag met jouw persoonlijke schema.
+                    {t('Kies je pakket in de app — je coach gaat dan direct aan de slag met jouw persoonlijke schema.')}
                   </div>
                 </div>
                 <div className="success-step">
                   <span className="success-step-num">03</span>
                   <div className="success-step-text">
                     {scanPath === "fysio"
-                      ? "Je coach plant een persoonlijke intake met je in."
-                      : "Je ontvangt binnen 24 uur je schema op maat."}
+                      ? t('Je coach plant een persoonlijke intake met je in.')
+                      : t('Je ontvangt binnen 24 uur je schema op maat.')}
                   </div>
                 </div>
               </div>
@@ -1779,11 +1776,11 @@ export default function App() {
                 className="call-btn"
                 style={{ margin: "0 auto", display: "inline-flex" }}
               >
-                Plan een Kennismakingsgesprek →
+                {t('Plan een Kennismakingsgesprek →')}
               </a>
               <div style={{ marginTop: "20px" }}>
                 <button className="restart-btn" onClick={reset}>
-                  ← Nieuwe Scan Starten
+                  {t('← Nieuwe Scan Starten')}
                 </button>
               </div>
             </div>
