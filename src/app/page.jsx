@@ -457,7 +457,7 @@ export default function App() {
   });
 
   // User info (gate)
-  const [userInfo, setUserInfo] = useState({ name: "", email: "" });
+  const [userInfo, setUserInfo] = useState({ name: "", email: "", phone: "" });
 
   // AI result (pain path only)
   const [result, setResult] = useState(null);
@@ -697,6 +697,7 @@ export default function App() {
       body: JSON.stringify({
         first_name: userInfo.name,
         email: userInfo.email,
+        phone: userInfo.phone,
         scan_path: scanPath,
         referral_source: data.referralSource || null,
         age_range: data.ageRange,
@@ -741,7 +742,7 @@ export default function App() {
     setScanPath("");
     setData({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", referralSource: "" });
     setPainData({ painLocations: [], painIntensity: 5, painDuration: "", painTiming: "", painTriggers: [] });
-    setUserInfo({ name: "", email: "" });
+    setUserInfo({ name: "", email: "", phone: "" });
     setResult(null);
     setError(null);
     setEmailSent(false);
@@ -757,6 +758,7 @@ export default function App() {
   const showCallCTA = result && (result.overall_risk?.toLowerCase() !== "low" || (painData.painIntensity ?? 0) >= 5);
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+  const isValidPhone = (p) => (p || "").replace(/\D/g, "").length >= 6;
 
   // ────────── RENDER ──────────
   return (
@@ -1429,6 +1431,34 @@ export default function App() {
                   </div>
                 </div>
 
+                <div className="field-wrap" style={{ marginTop: "12px" }}>
+                  <label className="field-label">{t('Telefoonnummer')}</label>
+                  <input
+                    className="field-input"
+                    type="tel"
+                    placeholder={t('Bijv. 06 12 34 56 78')}
+                    value={userInfo.phone}
+                    onChange={(e) =>
+                      setUserInfo((p) => ({ ...p, phone: e.target.value }))
+                    }
+                  />
+                  <div
+                    style={{
+                      fontSize: "10px",
+                      color:
+                        userInfo.phone && !isValidPhone(userInfo.phone)
+                          ? "#ff6b6b"
+                          : "#71717a",
+                      marginTop: "6px",
+                      letterSpacing: "0.5px",
+                    }}
+                  >
+                    {userInfo.phone && !isValidPhone(userInfo.phone)
+                      ? t('Check je telefoonnummer')
+                      : t('Zodat je coach je persoonlijk kan bereiken over je resultaat.')}
+                  </div>
+                </div>
+
                 {scanPath === "fysio" && (
                   <div className="field-wrap" style={{ marginBottom: "18px" }}>
                     <label className="field-label">
@@ -1456,6 +1486,7 @@ export default function App() {
                     !userInfo.name ||
                     !userInfo.email ||
                     !isValidEmail(userInfo.email) ||
+                    !isValidPhone(userInfo.phone) ||
                     submitting
                   }
                 >
