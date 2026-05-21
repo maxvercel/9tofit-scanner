@@ -1,6 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useT, useLocale } from "../lib/i18n";
+import { trackLead, trackSchedule, getFbCookies, newEventId, hasConsent } from "../lib/metaPixel";
+
+const CALENDLY_URL =
+  (typeof process !== "undefined" &&
+    process.env &&
+    process.env.NEXT_PUBLIC_CALENDLY_URL) ||
+  "https://calendly.com/max-9tofit/performance-strategy-call";
 
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
@@ -691,6 +698,10 @@ export default function App() {
     const platformUrl =
       process.env.NEXT_PUBLIC_PLATFORM_URL || "https://app.9tofit.nl";
     const isPain = scanPath === "pain";
+    // Meta-tracking (Fase 2): gedeeld event_id voor browser↔server dedup
+    const eventId = newEventId();
+    const { fbp, fbc } = getFbCookies();
+    const marketingConsent = hasConsent();
     const res = await fetch(`${platformUrl}/api/scan-submit`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -717,12 +728,18 @@ export default function App() {
         pain_timing: isPain ? painData.painTiming : null,
         pain_triggers: isPain ? painData.painTriggers : [],
         scanner_ai_result: aiResult || null,
+        event_id: eventId,
+        fbp,
+        fbc,
+        marketing_consent: marketingConsent,
       }),
     });
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
       throw new Error(errData.error || "Account aanmaken mislukt. Probeer het opnieuw.");
     }
+    // Lead-event in de browser (zelfde eventId → dedup met server-CAPI)
+    trackLead(eventId, { content_name: "performance_scan", scan_path: scanPath });
     return res.json();
   };
 
@@ -759,6 +776,71 @@ export default function App() {
 
   const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
   const isValidPhone = (p) => (p || "").replace(/\D/g, "").length >= 6;
+
+  // ── Calendly popup + Schedule-tracking (laag 4) ──
+  const ensureCalendly = () =>
+    new Promise((resolve) => {
+      if (typeof window === "undefined") return resolve(false);
+      if (window.Calendly) return resolve(true);
+      if (!document.getElementById("calendly-css")) {
+        const l = document.createElement("link");
+        l.id = "calendly-css";
+        l.rel = "stylesheet";
+        l.href = "https://assets.calendly.com/assets/external/widget.css";
+        document.head.appendChild(l);
+      }
+      const existing = document.getElementById("calendly-js");
+      if (!existing) {
+        const s = document.createElement("script");
+        s.id = "calendly-js";
+        s.async = true;
+        s.src = "https://assets.calendly.com/assets/external/widget.js";
+        s.onload = () => resolve(!!window.Calendly);
+        s.onerror = () => resolve(false);
+        document.body.appendChild(s);
+      } else {
+        const iv = setInterval(() => {
+          if (window.Calendly) {
+            clearInterval(iv);
+            resolve(true);
+          }
+        }, 100);
+        setTimeout(() => {
+          clearInterval(iv);
+          resolve(!!window.Calendly);
+        }, 3000);
+      }
+    });
+
+  const openCalendly = async () => {
+    const ok = await ensureCalendly();
+    if (ok && typeof window !== "undefined" && window.Calendly) {
+      window.Calendly.initPopupWidget({ url: CALENDLY_URL });
+    } else if (typeof window !== "undefined") {
+      window.open(CALENDLY_URL, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  // Luister naar Calendly's "event_scheduled" → vuur Schedule-pixel met dedup-id.
+  useEffect(() => {
+    const onMsg = (e) => {
+      if (!e || !e.data || typeof e.data !== "object") return;
+      if (e.data.event !== "calendly.event_scheduled") return;
+      let eventId;
+      try {
+        const uri =
+          e.data.payload &&
+          e.data.payload.event &&
+          e.data.payload.event.uri;
+        if (uri)
+          eventId = "cal_" + String(uri).split("/").filter(Boolean).pop();
+      } catch {}
+      // Alleen firen mét dedup-id, zodat we nooit dubbeltellen t.o.v. de webhook.
+      if (eventId) trackSchedule(eventId, { content_name: "strategy_call" });
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, []);
 
   // ────────── RENDER ──────────
   return (
@@ -1743,9 +1825,8 @@ export default function App() {
                     </div>
                   </div>
                   <a
-                    href="https://calendly.com/max-9tofit/performance-strategy-call"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href={CALENDLY_URL}
+                    onClick={(e) => { e.preventDefault(); openCalendly(); }}
                     className="call-btn"
                   >
                     {t('Boek Gratis Gesprek →')}
@@ -1804,9 +1885,8 @@ export default function App() {
                 </div>
               </div>
               <a
-                href="https://calendly.com/max-9tofit/performance-strategy-call"
-                target="_blank"
-                rel="noopener noreferrer"
+                href={CALENDLY_URL}
+                onClick={(e) => { e.preventDefault(); openCalendly(); }}
                 className="call-btn"
                 style={{ margin: "0 auto", display: "inline-flex" }}
               >
