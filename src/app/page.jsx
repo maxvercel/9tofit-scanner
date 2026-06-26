@@ -486,7 +486,7 @@ export default function App() {
     return () => observer.disconnect();
   }, [phase, step]);
 
-  // Check URL params for fysio referral
+  // Check URL params for fysio referral + capture UTM (campagne-attributie)
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
@@ -496,6 +496,19 @@ export default function App() {
         setScanPath("fysio");
         setPhase("assessment");
         setStep(0);
+      }
+      // UTM vastleggen zodat de coach in het CRM ziet welke advertentie/kanaal
+      // een scan-lead opleverde. Wordt meegestuurd naar /api/scan-submit en daar
+      // in scan_submissions.answers bewaard; bridge-lead leidt er de route uit af.
+      const utm = {
+        source: params.get("utm_source") || null,
+        medium: params.get("utm_medium") || null,
+        campaign: params.get("utm_campaign") || null,
+        content: params.get("utm_content") || null,
+        term: params.get("utm_term") || null,
+      };
+      if (utm.source || utm.medium || utm.campaign) {
+        setData((d) => ({ ...d, utm }));
       }
     }
   }, []);
@@ -711,6 +724,7 @@ export default function App() {
         phone: userInfo.phone,
         scan_path: scanPath,
         referral_source: data.referralSource || null,
+        utm: data.utm || null,
         age_range: data.ageRange,
         training_background: data.trainingBackground,
         goals: data.goals,
