@@ -367,6 +367,39 @@ const START_URGENCIES = [
   { id: "soon", label: "Binnenkort" },
 ];
 
+// Funnel v2 — intentie (koopbereidheid). Bepaalt samen met urgentie de lead-tier.
+const INTENTS = [
+  { id: "coach_now", label: "Ik wil dit nú aanpakken met begeleiding", icon: "🚀", sub: "Klaar om te starten met een coach" },
+  { id: "serious", label: "Serieus, maar ik wil eerst weten wat er speelt", icon: "🔍", sub: "Ik overweeg het en wil inzicht" },
+  { id: "explore", label: "Ik oriënteer me / doe het liever zelf", icon: "🧭", sub: "Rondkijken, nog geen concrete plannen" },
+];
+
+const INTENT_SCORE = { coach_now: 3, serious: 2, explore: 1 };
+const URGENCY_SCORE = { direct: 3, this_week: 2, soon: 1 };
+
+// Bereken lead-score + tier uit intentie, urgentie en profiel-signalen.
+function computeLeadTier(data, painData, scanPath) {
+  const intentPts = INTENT_SCORE[data.intent] || 1;
+  const urgencyPts = URGENCY_SCORE[data.startUrgency] || 0;
+  let score = intentPts + urgencyPts;
+
+  // Modifiers
+  if (scanPath === "pain") {
+    if (["chronic", "longterm"].includes(painData.painDuration)) score += 1;
+    if ((painData.painIntensity || 0) >= 7) score += 1;
+  }
+  if (parseInt(data.trainingDaysAvailable, 10) >= 4) score += 1;
+  if (["25-35", "35-45", "45-55"].includes(data.ageRange)) score += 1;
+
+  let tier = score >= 6 ? "hot" : score >= 3 ? "warm" : "cold";
+
+  // Harde regels
+  if (data.intent === "explore" && tier === "hot") tier = "warm"; // zelf-doener nooit hot
+  if (data.intent === "coach_now" && ["direct", "this_week"].includes(data.startUrgency)) tier = "hot";
+
+  return { score, tier };
+}
+
 // Pain-specific data
 const PAIN_LOCATIONS = [
   { icon: "🔙", label: "Onderrug", id: "lower_back", sub: "Lendenen regio" },
@@ -451,6 +484,7 @@ export default function App() {
     childrenCount: 0,
     trainingDaysAvailable: 3,
     startUrgency: "",
+    intent: "",
     referralSource: "",
   });
 
@@ -521,17 +555,23 @@ export default function App() {
     const steps = [
       "about_you",       // Step 0: age + training background
       "goals",           // Step 1: goals checkboxes + year goal text
-      "situation",       // Step 2: work situation + hours + training days + urgency
+      "intent",          // Step 2: koopintentie (v2 kwalificatie)
+      "situation",       // Step 3: work situation + hours + training days + urgency
     ];
     if (scanPath === "pain") {
-      steps.push("pain_location");   // Step 3: where + when
-      steps.push("pain_details");    // Step 4: intensity + duration
-      steps.push("pain_triggers");   // Step 5: movement triggers
+      steps.push("pain_location");   // where + when
+      steps.push("pain_details");    // intensity + duration
+      // Tier-diepte: koude/oriënterende leads krijgen minder frictie —
+      // de trigger-stap (minst kritisch) wordt voor hen overgeslagen.
+      if (data.intent !== "explore") {
+        steps.push("pain_triggers"); // movement triggers
+      }
     }
     return steps;
   };
 
   const steps = getSteps();
+  const leadTier = computeLeadTier(data, painData, scanPath).tier;
   const totalSteps = steps.length;
   const currentStepId = steps[step];
   const progress = totalSteps > 0 ? ((step + 1) / (totalSteps + 1)) * 100 : 0; // +1 for gate
@@ -543,6 +583,8 @@ export default function App() {
         return data.ageRange && data.trainingBackground;
       case "goals":
         return data.goals.length > 0;
+      case "intent":
+        return !!data.intent;
       case "situation":
         return data.workSituation && data.startUrgency;
       case "pain_location":
@@ -711,6 +753,8 @@ export default function App() {
     const platformUrl =
       process.env.NEXT_PUBLIC_PLATFORM_URL || "https://app.9tofit.nl";
     const isPain = scanPath === "pain";
+    // Funnel v2: lead-score + tier (koopintentie-kwalificatie)
+    const { score: leadScore, tier: leadTier } = computeLeadTier(data, painData, scanPath);
     // Meta-tracking (Fase 2): gedeeld event_id voor browser↔server dedup
     const eventId = newEventId();
     const { fbp, fbc } = getFbCookies();
@@ -735,6 +779,10 @@ export default function App() {
         children_count: data.childrenCount,
         training_days_available: data.trainingDaysAvailable,
         start_urgency: data.startUrgency,
+        // Funnel v2 kwalificatie
+        intent: data.intent || null,
+        lead_score: leadScore,
+        lead_tier: leadTier,
         has_pain: isPain,
         pain_locations: isPain ? painData.painLocations : [],
         pain_intensity: isPain ? painData.painIntensity : null,
@@ -771,7 +819,7 @@ export default function App() {
     setPhase("landing");
     setStep(0);
     setScanPath("");
-    setData({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", referralSource: "" });
+    setData({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", intent: "", referralSource: "" });
     setPainData({ painLocations: [], painIntensity: 5, painDuration: "", painTiming: "", painTriggers: [] });
     setUserInfo({ name: "", email: "", phone: "" });
     setResult(null);
@@ -1096,6 +1144,46 @@ export default function App() {
                   />
                   <div className="text-hint">
                     {t('Optioneel — maar hoe specifieker, hoe beter je coach je kan helpen.')}
+                  </div>
+
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>
+                      {t('← Terug')}
+                    </button>
+                    <button
+                      className="next-btn"
+                      onClick={nextStep}
+                      disabled={!canProceed()}
+                    >
+                      {t('Volgende →')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP: Intent (v2 kwalificatie) ── */}
+              {currentStepId === "intent" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Waar sta je nu?')}</div>
+                  <div className="step-title">{t('Wat past het best bij jou?')}</div>
+                  <div className="step-sub">
+                    {t('Zo weet je coach precies hoe hij je het beste kan helpen.')}
+                  </div>
+
+                  <div className="options-grid">
+                    {INTENTS.map((it) => (
+                      <button
+                        key={it.id}
+                        className={`option-card ${data.intent === it.id ? "selected" : ""}`}
+                        onClick={() =>
+                          setData((d) => ({ ...d, intent: it.id }))
+                        }
+                      >
+                        <span className="option-icon">{it.icon}</span>
+                        <span className="option-label">{t(it.label)}</span>
+                        <span className="option-check">✓</span>
+                      </button>
+                    ))}
                   </div>
 
                   <div className="nav-row">
@@ -1528,7 +1616,7 @@ export default function App() {
                 </div>
 
                 <div className="field-wrap" style={{ marginTop: "12px" }}>
-                  <label className="field-label">{t('Telefoonnummer')}</label>
+                  <label className="field-label">{t('Telefoonnummer (optioneel)')}</label>
                   <input
                     className="field-input"
                     type="tel"
@@ -1582,7 +1670,6 @@ export default function App() {
                     !userInfo.name ||
                     !userInfo.email ||
                     !isValidEmail(userInfo.email) ||
-                    !isValidPhone(userInfo.phone) ||
                     submitting
                   }
                 >
@@ -1829,13 +1916,13 @@ export default function App() {
                 <div className="call-block">
                   <div>
                     <div className="call-eyebrow">
-                      {t('Aanbevolen volgende stap')}
+                      {leadTier === "cold" ? t('Geen haast — wanneer jij er klaar voor bent') : t('Aanbevolen volgende stap')}
                     </div>
                     <div className="call-title">
-                      {t('Boek een Gratis Strategiegesprek')}
+                      {leadTier === "hot" ? t('Plan je gratis intakegesprek') : leadTier === "cold" ? t('Sparren kan — geheel vrijblijvend') : t('Boek een Gratis Strategiegesprek')}
                     </div>
                     <div className="call-desc">
-                      {t('Op basis van jouw profiel zou een 30-minuten sessie met Max je een precieze diagnose geven en een versnellingsprotocol gericht op jouw lichaam en leefstijl.')}
+                      {leadTier === "hot" ? t('Je gaf aan er nu mee aan de slag te willen. In een 30-minuten sessie geeft Max je een precieze diagnose en een concreet plan — deze week nog enkele plekken.') : leadTier === "cold" ? t('Je rapport staat hierboven, neem er rustig de tijd voor. Wil je later toch sparren, dan staat een gratis gesprek altijd open.') : t('Op basis van jouw profiel zou een 30-minuten sessie met Max je een precieze diagnose geven en een versnellingsprotocol gericht op jouw lichaam en leefstijl.')}
                     </div>
                   </div>
                   <a
@@ -1843,7 +1930,7 @@ export default function App() {
                     onClick={(e) => { e.preventDefault(); openCalendly(); }}
                     className="call-btn"
                   >
-                    {t('Boek Gratis Gesprek →')}
+                    {leadTier === "hot" ? t('Plan mijn intake →') : leadTier === "cold" ? t('Plan vrijblijvend gesprek →') : t('Boek Gratis Gesprek →')}
                   </a>
                 </div>
               )}
@@ -1874,7 +1961,7 @@ export default function App() {
               <div className="success-sub">
                 {scanPath === "fysio"
                   ? t('Je coach Max ontvangt nu je volledige profiel en neemt zo snel mogelijk contact met je op om je programma te bespreken.')
-                  : t('Je coach Max heeft je profiel ontvangen en bouwt een schema op maat. Je ontvangt binnen 24 uur bericht.')}
+                  : (leadTier === "hot" ? t('Je startschema staat klaar in de app. Omdat je er nu mee aan de slag wilt, neemt coach Max persoonlijk contact op — plan hieronder direct je gratis gesprek.') : leadTier === "cold" ? t('Je startschema staat klaar in de app — begin wanneer jij wilt. Geen druk; je coach denkt vrijblijvend mee als je daar behoefte aan hebt.') : t('Je startschema staat klaar in de app. Je coach Max kijkt mee en verfijnt je schema op maat.'))}
               </div>
               <div className="success-steps">
                 <div className="success-step">
@@ -1886,7 +1973,7 @@ export default function App() {
                 <div className="success-step">
                   <span className="success-step-num">02</span>
                   <div className="success-step-text">
-                    {t('Kies je pakket in de app — je coach gaat dan direct aan de slag met jouw persoonlijke schema.')}
+                    {t('Je persoonlijke startschema staat al klaar — log in en begin direct.')}
                   </div>
                 </div>
                 <div className="success-step">
@@ -1904,7 +1991,7 @@ export default function App() {
                 className="call-btn"
                 style={{ margin: "0 auto", display: "inline-flex" }}
               >
-                {t('Plan een Kennismakingsgesprek →')}
+                {leadTier === "hot" ? t('Plan mijn gratis gesprek →') : leadTier === "cold" ? t('Later een gesprek plannen') : t('Plan een Kennismakingsgesprek →')}
               </a>
               <div style={{ marginTop: "20px" }}>
                 <button className="restart-btn" onClick={reset}>
