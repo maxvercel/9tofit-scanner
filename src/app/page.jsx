@@ -638,35 +638,39 @@ export default function App() {
     setError(null);
     setAnalyzeStep(0);
 
-    for (let i = 0; i < ANALYZE_STEPS.length; i++) {
-      await new Promise((r) => setTimeout(r, 950));
+    // Start de AI-analyse METEEN, parallel met de stap-animatie. Voorkomt dat
+    // het scherm ~20s stil hangt terwijl alle vinkjes al groen staan.
+    const analysisPromise = fetch("/api/scan", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "pain_performance",
+        lang: locale,
+        answers: {
+          pain_location: painData.painLocations,
+          pain_timing: painData.painTiming,
+          movement_triggers: painData.painTriggers,
+          pain_duration: painData.painDuration,
+          pain_intensity: painData.painIntensity,
+          work_type: data.workSituation,
+          training_history: data.trainingBackground,
+          activity_level: data.trainingDaysAvailable,
+          previous_treatment: [],
+        },
+        userInfo,
+      }),
+    }).then((r) => r.json());
+
+    // Animeer de eerste stappen; houd de LAATSTE stap "bezig" tot de analyse binnen is.
+    for (let i = 0; i < ANALYZE_STEPS.length - 1; i++) {
+      await new Promise((r) => setTimeout(r, 1200));
       setAnalyzeStep(i + 1);
     }
 
     try {
-      // Call local AI scan endpoint
-      const res = await fetch("/api/scan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "pain_performance",
-          lang: locale,
-          answers: {
-            pain_location: painData.painLocations,
-            pain_timing: painData.painTiming,
-            movement_triggers: painData.painTriggers,
-            pain_duration: painData.painDuration,
-            pain_intensity: painData.painIntensity,
-            work_type: data.workSituation,
-            training_history: data.trainingBackground,
-            activity_level: data.trainingDaysAvailable,
-            previous_treatment: [], // Not asked in new flow, send empty
-          },
-          userInfo,
-        }),
-      });
-      const aiData = await res.json();
+      const aiData = await analysisPromise;
       if (!aiData.success) throw new Error(aiData.error || "Analysis failed");
+      setAnalyzeStep(ANALYZE_STEPS.length);
       setResult(aiData.result);
       setPhase("result");
 
@@ -1702,7 +1706,7 @@ export default function App() {
                 {t('Je bewegingsprofiel analyseren…')}
               </div>
               <div className="analyzing-sub">
-                {t('Je persoonlijke rapport opbouwen')}
+                {t('Je persoonlijke rapport opbouwen — dit duurt ongeveer 20–30 seconden')}
               </div>
               <div className="analyzing-steps">
                 {ANALYZE_STEPS.map((s, i) => (
