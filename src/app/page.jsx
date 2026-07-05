@@ -513,6 +513,44 @@ export default function App() {
   const [analyzeStep, setAnalyzeStep] = useState(0);
   const [expandedDays, setExpandedDays] = useState({ 0: true });
   const [submitting, setSubmitting] = useState(false);
+  // Visitor-id van de 9toFit-tracker op de parent-pagina (9tofit.nl). De scan
+  // draait cross-origin (vercel.app) en kan de _9tf_vid cookie niet zelf lezen,
+  // dus we vragen het id op via postMessage (met URL-param als fallback). Wordt
+  // meegestuurd naar /api/scan-submit zodat de coach de bezoeker-journey in het
+  // CRM aan deze lead gekoppeld ziet i.p.v. "Anoniem".
+  const [visitorId, setVisitorId] = useState(null);
+
+  // Vraag het visitor-id op bij de parent-pagina + luister op het antwoord.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    // Fallback 1: expliciete URL-param (als de embed die ooit meegeeft).
+    try {
+      const p = new URLSearchParams(window.location.search).get("_9tf_vid");
+      if (p) setVisitorId(p);
+    } catch { /* ignore */ }
+
+    const onMsg = (ev) => {
+      const d = ev && ev.data;
+      if (!d || d.type !== "9tf_vid" || !d.visitorId) return;
+      // Accepteer alleen berichten van de 9tofit.nl parent-origins.
+      if (ev.origin && !/\.9tofit\.nl$|^https:\/\/9tofit\.nl$/.test(ev.origin)) return;
+      setVisitorId((cur) => cur || d.visitorId);
+    };
+    window.addEventListener("message", onMsg);
+
+    // Vraag het id op; retry een paar keer tegen de laad-race met de tracker.
+    let tries = 0;
+    const ask = () => {
+      try { window.parent.postMessage({ type: "9tf_request_vid" }, "*"); } catch { /* ignore */ }
+    };
+    ask();
+    const iv = setInterval(() => {
+      if (++tries >= 6) { clearInterval(iv); return; } // 6 × 500ms = 3s
+      ask();
+    }, 500);
+
+    return () => { window.removeEventListener("message", onMsg); clearInterval(iv); };
+  }, []);
 
   // Report height to parent WordPress page so iframe resizes automatically
   useEffect(() => {
@@ -804,6 +842,10 @@ export default function App() {
         fbp,
         fbc,
         marketing_consent: marketingConsent,
+        // Koppelt de anonieme bezoeker-journey (tracker-cookie op 9tofit.nl)
+        // aan deze lead in het CRM. Null als de tracker niet reageerde (bv.
+        // opt-out/WP-admin) — scan-submit slaat de koppeling dan netjes over.
+        visitor_id: visitorId,
       }),
     });
     if (!res.ok) {
