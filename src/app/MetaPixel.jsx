@@ -15,6 +15,46 @@ export default function MetaPixel() {
 
   useEffect(() => {
     if (!pixelEnabled()) return; // volledig dormant
+
+    // Embedded in de 9tofit.nl-site? Dan geldt de MARKETING-toestemming uit de
+    // 9toFit-tracker-banner op de parent-pagina. We tonen GEEN eigen banner
+    // (één banner, één toestemming) en luisteren naar de consent-brug.
+    const embedded =
+      typeof window !== "undefined" && window.parent !== window.self;
+
+    if (embedded) {
+      loadPixel(); // base laden in 'revoke' — vuurt niks tot 'grant'
+      let settled = false;
+      const applyGrant = () => { if (settled) return; settled = true; grantConsent(); };
+      const applyDeny = () => { if (settled) return; settled = true; denyConsent(); };
+
+      // Eerder onthouden keuze meteen respecteren.
+      if (getConsent() === "granted") applyGrant();
+
+      const onMsg = (ev) => {
+        if (!/(^https:\/\/9tofit\.nl$)|(\.9tofit\.nl$)/.test(ev.origin || "")) return;
+        const d = ev.data;
+        if (!d || d.type !== "9tf_consent") return;
+        if (d.marketing === true) applyGrant();               // pixel aan + PageView
+        else if (d.choice && d.choice !== "unknown") applyDeny(); // expliciet geweigerd
+      };
+      window.addEventListener("message", onMsg);
+
+      // Huidige status opvragen bij de parent (retry tegen de laad-race).
+      let tries = 0;
+      const ask = () => {
+        try { window.parent.postMessage({ type: "9tf_request_consent" }, "*"); } catch {}
+      };
+      ask();
+      const iv = setInterval(() => {
+        if (settled || ++tries >= 6) { clearInterval(iv); return; } // 6 × 500ms = 3s
+        ask();
+      }, 500);
+
+      return () => { window.removeEventListener("message", onMsg); clearInterval(iv); };
+    }
+
+    // Standalone (scanner los geopend): eigen banner als fallback.
     const choice = getConsent();
     if (choice === "granted") {
       grantConsent(); // pixel laden + PageView
