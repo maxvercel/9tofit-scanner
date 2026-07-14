@@ -814,6 +814,11 @@ export default function App() {
         first_name: userInfo.name,
         email: userInfo.email,
         phone: userInfo.phone,
+        // Follow-up-Garantie: het veld op de gate zegt letterlijk "Laat je
+        // (WhatsApp-)nummer achter zodat je coach je snel kan bereiken" — een
+        // ingevuld nummer is dus toestemming om te appen. Reist via scan-submit
+        // mee naar de leadkaart (WhatsApp-knop in het CRM).
+        whatsapp_consent: isValidPhone(userInfo.phone),
         scan_path: scanPath,
         referral_source: data.referralSource || null,
         utm: data.utm || null,
