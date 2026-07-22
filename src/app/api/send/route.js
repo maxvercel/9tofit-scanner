@@ -29,6 +29,15 @@ const EMAIL_TRANSLATIONS = {
     en: 'See your movement limitations, risk factors and 7-day corrective plan below.',
   },
   '— Max, 9toFit Bewegingsspecialist': { en: '— Max, 9toFit Movement Specialist' },
+  // Pain email — stat labels + next-step CTA (waren hardcoded NL)
+  'Programma': { en: 'Program' },
+  '7-daags correctieplan': { en: '7-day corrective plan' },
+  'Volgende Stap': { en: 'Next Step' },
+  'Boek Je Gratis Strategiegesprek': { en: 'Book Your Free Strategy Call' },
+  '30 minuten met Max — een precieze diagnose en een geacceleerd herstelprotocol speciaal voor jouw situatie.': {
+    en: '30 minutes with Max — a precise diagnosis and an accelerated recovery protocol tailored to your situation.',
+  },
+  'GRATIS AFSPRAAK MAKEN →': { en: 'BOOK A FREE CALL →' },
   // Intake subjects
   'Welkom bij 9toFit — Intake Ontvangen': { en: 'Welcome to 9toFit — Intake Received' },
   'Welkom bij 9toFit — Profiel Ontvangen': { en: 'Welcome to 9toFit — Profile Received' },
@@ -58,15 +67,19 @@ const EMAIL_TRANSLATIONS = {
   'Je profiel is doorgestuurd naar coach Max. Hij neemt zo snel mogelijk contact met je op om je persoonlijke trainingsschema te bespreken.': {
     en: 'Your profile has been forwarded to coach Max. He will contact you as soon as possible to discuss your personal training program.',
   },
-  'Je profiel is ontvangen! Coach Max bouwt een persoonlijk trainingsschema op maat. Je ontvangt binnen 24 uur bericht zodra je schema klaarstaat.': {
-    en: 'Your profile has been received! Coach Max is building a personal custom training program. You will hear back within 24 hours once your program is ready.',
+  'Je persoonlijke startschema staat al klaar in de app — je kunt meteen beginnen. Coach Max kijkt mee en verfijnt het waar nodig.': {
+    en: 'Your personal starter program is already waiting in the app — you can start right away. Coach Max keeps an eye on it and fine-tunes where needed.',
   },
+  'Direct — 2 weken gratis': { en: 'Right away — 2 weeks free' },
   'Wat nu?': { en: 'What now?' },
   'Check je inbox — je ontvangt een aparte <strong style="color:#fff;">magic link</strong> om direct in te loggen': {
     en: 'Check your inbox — you will receive a separate <strong style="color:#fff;">magic link</strong> to log in directly',
   },
   'Je coach bekijkt je profiel en stelt een schema op': {
     en: 'Your coach reviews your profile and builds a program',
+  },
+  'Je persoonlijke startschema staat al klaar — log in en begin direct': {
+    en: 'Your personal starter program is ready — log in and start right away',
   },
   'Start met trainen zodra je schema klaarstaat in de app': {
     en: 'Start training as soon as your program is ready in the app',
@@ -91,6 +104,10 @@ function tEmail(text, lang) {
   const entry = EMAIL_TRANSLATIONS[text];
   return entry?.en || text;
 }
+
+// Calendly-link uit env (val terug op de vaste slug). Voorheen hardcoded in de
+// mails, waardoor een gewijzigde slug naar een dode link wees.
+const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || 'https://calendly.com/max-9tofit/performance-strategy-call';
 
 export async function POST(request) {
   try {
@@ -288,12 +305,12 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #27272a;border-radius:8px;">
       <tr>
         <td width="50%" style="padding:20px;border-right:1px solid #27272a;vertical-align:top;">
-          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Toegang</div>
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${tt('Toegang')}</div>
           <div style="font-size:14px;color:#ffffff;font-weight:700;">${tt('Direct beschikbaar')}</div>
         </td>
         <td width="50%" style="padding:20px;vertical-align:top;">
-          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Programma</div>
-          <div style="font-size:14px;color:#ffffff;font-weight:700;">7-daags correctieplan</div>
+          <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${tt('Programma')}</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">${tt('7-daags correctieplan')}</div>
         </td>
       </tr>
     </table>
@@ -302,10 +319,10 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
   <tr><td style="padding:24px 0 0 0;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid rgba(249,115,22,0.2);border-radius:8px;">
       <tr><td style="padding:24px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Volgende Stap</div>
-        <div style="font-size:18px;font-weight:900;color:#ffffff;margin-bottom:8px;line-height:1.1;">Boek Je Gratis Strategiegesprek</div>
-        <div style="font-size:13px;color:#a1a1aa;line-height:1.7;margin-bottom:16px;">30 minuten met Max — een precieze diagnose en een geacceleerd herstelprotocol speciaal voor jouw situatie.</div>
-        <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;border-radius:8px;">GRATIS AFSPRAAK MAKEN →</a>
+        <div style="font-size:9px;letter-spacing:2px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${tt('Volgende Stap')}</div>
+        <div style="font-size:18px;font-weight:900;color:#ffffff;margin-bottom:8px;line-height:1.1;">${tt('Boek Je Gratis Strategiegesprek')}</div>
+        <div style="font-size:13px;color:#a1a1aa;line-height:1.7;margin-bottom:16px;">${tt('30 minuten met Max — een precieze diagnose en een geacceleerd herstelprotocol speciaal voor jouw situatie.')}</div>
+        <a href="${CALENDLY_URL}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;border-radius:8px;">${tt('GRATIS AFSPRAAK MAKEN →')}</a>
       </td></tr>
     </table>
   </td></tr>
@@ -458,6 +475,7 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
     body: JSON.stringify({
       from: `9toFit Performance <${fromEmail}>`,
       to: [email],
+      reply_to: coachEmail,
       subject: `${tt('Jouw Bewegingsanalyse Rapport')} - ${result?.overall_risk || ''} ${tt('Risico')} - ${tt('7-Daags Plan')}`,
       html: clientHtml
     })
@@ -549,7 +567,7 @@ async function sendIntakeEmails({ name, email, fromEmail, coachEmail, scanPath, 
     <div style="font-size:15px;color:#a1a1aa;line-height:1.8;max-width:460px;">
       ${isFysio
         ? tt('Je profiel is doorgestuurd naar coach Max. Hij neemt zo snel mogelijk contact met je op om je persoonlijke trainingsschema te bespreken.')
-        : tt('Je profiel is ontvangen! Coach Max bouwt een persoonlijk trainingsschema op maat. Je ontvangt binnen 24 uur bericht zodra je schema klaarstaat.')
+        : tt('Je persoonlijke startschema staat al klaar in de app — je kunt meteen beginnen. Coach Max kijkt mee en verfijnt het waar nodig.')
       }
     </div>
   </td></tr>
@@ -565,7 +583,7 @@ async function sendIntakeEmails({ name, email, fromEmail, coachEmail, scanPath, 
           </td></tr>
           <tr><td style="padding:0 0 12px 0;">
             <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:'Courier New',monospace;vertical-align:top;">02</span>
-            <span style="font-size:13px;color:#e4e4e7;margin-left:12px;">${tt('Je coach bekijkt je profiel en stelt een schema op')}</span>
+            <span style="font-size:13px;color:#e4e4e7;margin-left:12px;">${isFysio ? tt('Je coach bekijkt je profiel en stelt een schema op') : tt('Je persoonlijke startschema staat al klaar — log in en begin direct')}</span>
           </td></tr>
           <tr><td style="padding:0;">
             <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:'Courier New',monospace;vertical-align:top;">03</span>
@@ -581,7 +599,7 @@ async function sendIntakeEmails({ name, email, fromEmail, coachEmail, scanPath, 
       <tr>
         <td width="50%" style="padding:20px;border-right:1px solid #27272a;vertical-align:top;">
           <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">Toegang</div>
-          <div style="font-size:14px;color:#ffffff;font-weight:700;">${tt('Na pakketkeuze')}</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">${tt('Direct — 2 weken gratis')}</div>
         </td>
         <td width="50%" style="padding:20px;vertical-align:top;">
           <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${tt('Volgende stap')}</div>
@@ -597,7 +615,7 @@ async function sendIntakeEmails({ name, email, fromEmail, coachEmail, scanPath, 
         <div style="font-size:9px;letter-spacing:2px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${tt('Sneller starten?')}</div>
         <div style="font-size:18px;font-weight:900;color:#ffffff;margin-bottom:8px;line-height:1.1;">${tt('Plan een kennismakingsgesprek')}</div>
         <div style="font-size:13px;color:#a1a1aa;line-height:1.7;margin-bottom:16px;">${tt('30 minuten met Max — gratis en vrijblijvend.')}</div>
-        <a href="https://calendly.com/max-9tofit/performance-strategy-call" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;border-radius:8px;">${tt('PLAN GESPREK →')}</a>
+        <a href="${CALENDLY_URL}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;border-radius:8px;">${tt('PLAN GESPREK →')}</a>
       </td></tr>
     </table>
   </td></tr>
@@ -700,9 +718,10 @@ async function sendIntakeEmails({ name, email, fromEmail, coachEmail, scanPath, 
     body: JSON.stringify({
       from: `9toFit Performance <${fromEmail}>`,
       to: [email],
+      reply_to: coachEmail,
       subject: isFysio
         ? (lang === 'en' ? 'Your intake has been received — your coach will be in touch' : 'Je intake is ontvangen — je coach neemt contact op')
-        : (lang === 'en' ? 'Your Performance Scan has been received — program is being built' : 'Je Performance Scan is ontvangen — schema wordt gebouwd'),
+        : (lang === 'en' ? 'Your starter program is ready — log in and start' : 'Je startschema staat klaar — log in en begin'),
       html: clientHtml
     })
   });
