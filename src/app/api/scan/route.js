@@ -72,7 +72,7 @@ export async function POST(request) {
 
     const langInstruction = isEn
       ? `IMPORTANT: All text output must be in English.`
-      : `IMPORTANT: All text output must be in Dutch (Nederlands).`;
+      : `BELANGRIJK: ALLE tekst moet in het Nederlands zijn — óók alle namen, titels en labels (bewegingsbeperkingen, oefeningen, dag-titels, risicofactoren). Gebruik GEEN Engelse (vak)termen; vertaal alles naar natuurlijk Nederlands. Bijvoorbeeld: 'Zit-naar-sta-controle' i.p.v. 'Sit-to-Stand', 'Langdurig zitten' i.p.v. 'Prolonged Sitting', 'Voorwaartse kophouding' i.p.v. 'Forward Head Posture'. Schrijf 'nek' (nooit 'neck') en 'rug' (nooit 'back').`;
     const langSuffix = isEn ? '- IN ENGLISH' : '- IN DUTCH';
     const riskLabels = isEn ? 'Low | Moderate | High' : 'Laag | Gemiddeld | Hoog';
     const urgencyExamples = isEn

@@ -65,6 +65,12 @@ const STYLES = `
   .pillar-num { font-size: 10px; letter-spacing: 1px; font-weight: 700; color: var(--accent); margin-bottom: 10px; }
   .pillar-title { font-size: 14px; font-weight: 800; color: #ffffff; margin-bottom: 6px; }
   .pillar-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  /* VALUE STACK (landing — concrete beloning i.p.v. abstracte pijlers) */
+  .value-stack { display: flex; flex-direction: column; gap: 12px; margin-bottom: 40px; }
+  .vs-item { display: flex; gap: 12px; align-items: flex-start; }
+  .vs-ic { color: var(--green); font-weight: 900; font-size: 14px; flex-shrink: 0; line-height: 1.5; }
+  .vs-tx { font-size: 14px; color: var(--text); line-height: 1.5; }
+  .vs-tx b { color: #ffffff; font-weight: 700; }
   .cta-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
   .cta-btn {
     display: inline-flex; align-items: center; gap: 10px;
@@ -478,6 +484,11 @@ export default function App() {
   // Scan path: 'fysio' | 'fitness' | 'pain'
   const [scanPath, setScanPath] = useState("");
 
+  // Landing-hook variant (via ?hook=...). Laat de landing-kop matchen met de
+  // koude outreach (bijv. ?hook=kantoorlijf voor rug-/nekklachten bij
+  // kantoorwerk). Leeg = de algemene landing voor gemengd verkeer.
+  const [hook, setHook] = useState("");
+
   // Shared data (all paths)
   const [data, setData] = useState({
     ageRange: "",
@@ -574,7 +585,26 @@ export default function App() {
         setScanPath("fysio");
         setPhase("assessment");
         setStep(0);
+      } else {
+        // Deep-link direct in een pad (koude leads springen het keuzescherm over).
+        // Werkt via ?pad=pijn|fitness|fysio, of als fallback utm_content=pijn|...
+        const PATH_ALIASES = {
+          pijn: "pain", pain: "pain",
+          fitness: "fitness", fit: "fitness",
+          fysio: "fysio", physio: "fysio",
+        };
+        const padParam = (params.get("pad") || params.get("path") || "").toLowerCase();
+        const utmContent = (params.get("utm_content") || "").toLowerCase();
+        const deepPath = PATH_ALIASES[padParam] || PATH_ALIASES[utmContent] || "";
+        if (deepPath) {
+          setScanPath(deepPath);
+          setPhase("assessment");
+          setStep(0);
+        }
       }
+      // Landing-hook (matcht de kop met de koude outreach) via ?hook=...
+      const hookParam = (params.get("hook") || "").toLowerCase();
+      if (hookParam) setHook(hookParam);
       // UTM vastleggen zodat de coach in het CRM ziet welke advertentie/kanaal
       // een scan-lead opleverde. Wordt meegestuurd naar /api/scan-submit en daar
       // in scan_submissions.answers bewaard; bridge-lead leidt er de route uit af.
@@ -593,25 +623,31 @@ export default function App() {
 
   // ── Build dynamic question steps based on path ──
   const getSteps = () => {
-    // All paths share: About You, Goals, Situation
-    // Pain path adds: Pain Location, Pain Details, Pain Triggers+Duration
-    // Fysio path adds: referral context handled in gate
-    const steps = [
-      "about_you",       // Step 0: age + training background
-      "goals",           // Step 1: goals checkboxes + year goal text
-      "intent",          // Step 2: koopintentie (v2 kwalificatie)
-      "situation",       // Step 3: work situation + hours + training days + urgency
-    ];
+    // Pijn-pad opent met de makkelijkste, meest herkenbare vraag ("waar zit het?")
+    // zodat een koude lead direct momentum pakt vóór de zwaardere profielvragen.
     if (scanPath === "pain") {
-      steps.push("pain_location");   // where + when
-      steps.push("pain_details");    // intensity + duration
+      const steps = [
+        "pain_location",   // where + when  (laagdrempelige opener)
+        "pain_details",    // intensity + duration
+        "about_you",       // age + training background
+        "goals",           // goals + year goal text
+        "intent",          // koopintentie (v2 kwalificatie)
+        "situation",       // work situation + hours + training days + urgency
+      ];
       // Tier-diepte: koude/oriënterende leads krijgen minder frictie —
       // de trigger-stap (minst kritisch) wordt voor hen overgeslagen.
       if (data.intent !== "explore") {
         steps.push("pain_triggers"); // movement triggers
       }
+      return steps;
     }
-    return steps;
+    // Fitness/fysio: profiel-vragen (geen pijn-stappen; fysio-context in de gate).
+    return [
+      "about_you",       // age + training background
+      "goals",           // goals + year goal text
+      "intent",          // koopintentie (v2 kwalificatie)
+      "situation",       // work situation + hours + training days + urgency
+    ];
   };
 
   const steps = getSteps();
@@ -876,7 +912,8 @@ export default function App() {
     setPhase("landing");
     setStep(0);
     setScanPath("");
-    setData({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", intent: "", referralSource: "" });
+    // Bewaar UTM zodat een 2e scan in dezelfde sessie z'n kanaal-attributie houdt.
+    setData((prev) => ({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", intent: "", referralSource: "", utm: prev.utm }));
     setPainData({ painLocations: [], painIntensity: 5, painDuration: "", painTiming: "", painTriggers: [] });
     setUserInfo({ name: "", email: "", phone: "" });
     setResult(null);
@@ -973,37 +1010,42 @@ export default function App() {
             <div className="landing">
               <div className="landing-kicker">
                 <span className="kicker-line" />
-                {t('Gratis Performance Scan')}
+                {hook === "kantoorlijf"
+                  ? t('Het Kantoorlijf-onderzoek')
+                  : t('Gratis Performance Scan')}
               </div>
               <h1 className="landing-h1">
-                {t('Ontdek wat jouw')}
-                <br />
-                {t('lichaam')} <em>{t('nodig heeft.')}</em>
+                {hook === "kantoorlijf" ? (
+                  <>
+                    {t('Zittend werk sloopt je')}
+                    <br />
+                    <em>{t('rug en nek.')}</em> {t('Ontdek wat jouw lichaam nodig heeft.')}
+                  </>
+                ) : (
+                  <>
+                    {t('Ontdek wat jouw')}
+                    <br />
+                    {t('lichaam')} <em>{t('nodig heeft.')}</em>
+                  </>
+                )}
               </h1>
               <p className="landing-sub">
-                {t('Of je nu sterker wilt worden, pijn wilt verhelpen, of doorgestuurd bent door een fysiotherapeut — deze scan geeft jouw coach een compleet beeld. In minder dan 3 minuten.')}
+                {hook === "kantoorlijf"
+                  ? t('Doe de gratis 3-minuten scan. Je krijgt een persoonlijke bewegingsanalyse, een concreet plan op jouw klacht, én 2 weken de 9toFit-app om er meteen mee aan de slag te gaan.')
+                  : t('Of je nu sterker wilt worden, pijn wilt verhelpen, of doorgestuurd bent door een fysiotherapeut — deze scan geeft jouw coach een compleet beeld. In minder dan 3 minuten.')}
               </p>
-              <div className="landing-pillars">
-                <div className="pillar">
-                  <div className="pillar-num">01</div>
-                  <div className="pillar-title">{t('Persoonlijk Profiel')}</div>
-                  <div className="pillar-desc">
-                    {t('Leeftijd, ervaring, doelen en situatie — alles wat je coach moet weten.')}
-                  </div>
+              <div className="value-stack">
+                <div className="vs-item">
+                  <span className="vs-ic">✓</span>
+                  <span className="vs-tx">{t('Persoonlijke bewegingsanalyse — waar het misgaat en waarom')}</span>
                 </div>
-                <div className="pillar">
-                  <div className="pillar-num">02</div>
-                  <div className="pillar-title">{t('Pijn of Klachten?')}</div>
-                  <div className="pillar-desc">
-                    {t('Heb je klachten? Dan krijg je direct een persoonlijke bewegingsanalyse en correctief plan.')}
-                  </div>
+                <div className="vs-item">
+                  <span className="vs-ic">✓</span>
+                  <span className="vs-tx">{t('Een concreet plan op jouw situatie')}</span>
                 </div>
-                <div className="pillar">
-                  <div className="pillar-num">03</div>
-                  <div className="pillar-title">{t('Coach Op Maat')}</div>
-                  <div className="pillar-desc">
-                    {t('Je coach bouwt een schema op basis van jouw unieke profiel. Geen standaard templates.')}
-                  </div>
+                <div className="vs-item">
+                  <span className="vs-ic">✓</span>
+                  <span className="vs-tx">{t('2 weken de 9toFit-app gratis — meteen beginnen')}</span>
                 </div>
               </div>
               <div className="cta-row">
@@ -2032,7 +2074,7 @@ export default function App() {
                 <div className="success-step">
                   <span className="success-step-num">02</span>
                   <div className="success-step-text">
-                    {t('Je persoonlijke startschema staat al klaar — log in en begin direct.')}
+                    {t('Je persoonlijke startschema staat al klaar in de app.')}
                   </div>
                 </div>
                 <div className="success-step">
@@ -2040,7 +2082,7 @@ export default function App() {
                   <div className="success-step-text">
                     {scanPath === "fysio"
                       ? t('Je coach plant een persoonlijke intake met je in.')
-                      : t('Je ontvangt binnen 24 uur je schema op maat.')}
+                      : t('Je coach Max kijkt mee en verfijnt je schema op maat terwijl je traint.')}
                   </div>
                 </div>
               </div>
