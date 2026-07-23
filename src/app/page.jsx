@@ -1032,16 +1032,16 @@ export default function App() {
               <p className="landing-sub">
                 {hook === "kantoorlijf"
                   ? t('Doe de gratis 3-minuten scan. Je krijgt een persoonlijke bewegingsanalyse, een concreet plan op jouw klacht, én 2 weken de 9toFit-app om er meteen mee aan de slag te gaan.')
-                  : t('Of je nu sterker wilt worden, pijn wilt verhelpen, of doorgestuurd bent door een fysiotherapeut — deze scan geeft jouw coach een compleet beeld. In minder dan 3 minuten.')}
+                  : t('Sterker worden, klachten oplossen of terug na een blessure — in 3 minuten ken je je sterke punten, je grootste groeikans én heb je een plan om vandaag te starten.')}
               </p>
               <div className="value-stack">
                 <div className="vs-item">
                   <span className="vs-ic">✓</span>
-                  <span className="vs-tx">{t('Persoonlijke bewegingsanalyse — waar het misgaat en waarom')}</span>
+                  <span className="vs-tx">{t('Persoonlijk profiel — je sterke punten én je grootste groeikans')}</span>
                 </div>
                 <div className="vs-item">
                   <span className="vs-ic">✓</span>
-                  <span className="vs-tx">{t('Een concreet plan op jouw situatie')}</span>
+                  <span className="vs-tx">{t('Een concreet plan dat meteen klaarstaat')}</span>
                 </div>
                 <div className="vs-item">
                   <span className="vs-ic">✓</span>
@@ -1077,7 +1077,7 @@ export default function App() {
                 <div className="path-desc">
                   {t('Doorgestuurd door je fysiotherapeut — klachtenvrij en klaar om te trainen.')}
                 </div>
-                <span className="path-tag blue">{t('Intake · Coach bouwt schema')}</span>
+                <span className="path-tag blue">{t('Opbouwplan · Intake volgt')}</span>
               </button>
 
               <button
@@ -1087,10 +1087,10 @@ export default function App() {
                 <span className="path-icon">💪</span>
                 <div className="path-title">{t('Fitter & sterker worden')}</div>
                 <div className="path-desc">
-                  {t('Geen klachten — je wilt trainen met een persoonlijk schema op maat.')}
+                  {t('Ontdek je grootste groeikans + een plan om nu te starten.')}
                 </div>
                 <span className="path-tag green">
-                  {t('Coach bouwt schema op maat')}
+                  {t('Profiel · Krachtplan klaar')}
                 </span>
               </button>
 
@@ -1104,7 +1104,7 @@ export default function App() {
                   {t('Terugkerende blessures, stijfheid of pijn die je training belemmert.')}
                 </div>
                 <span className="path-tag orange">
-                  {t('Persoonlijke bewegingsanalyse · Correctief plan')}
+                  {t('Bewegingsanalyse · 7-daags plan')}
                 </span>
               </button>
 
@@ -1636,18 +1636,26 @@ export default function App() {
                       <br />
                       {t('Waar moeten we het naartoe sturen?')}
                     </>
+                  ) : scanPath === "fysio" ? (
+                    <>
+                      {t('Je herstelprofiel is klaar.')}
+                      <br />
+                      {t("Waar sturen we 'm heen?")}
+                    </>
                   ) : (
                     <>
-                      {t('Nog één stap.')}
+                      {t('Je Performance Profiel is klaar.')}
                       <br />
-                      {t('Hoe kunnen we je bereiken?')}
+                      {t("Waar sturen we 'm heen?")}
                     </>
                   )}
                 </div>
                 <div className="gate-sub">
                   {scanPath === "pain"
                     ? t('Vul je gegevens in om je persoonlijke bewegingsanalyse en 7-daags correctief plan direct via e-mail te ontvangen.')
-                    : t('Je coach ontvangt je volledige profiel en neemt binnen 24 uur contact met je op om je schema te bespreken.')}
+                    : scanPath === "fysio"
+                    ? t('Vul je gegevens in en zie direct je herstelprofiel én je opbouwplan. Je coach plant daarna je intake in.')
+                    : t('Vul je gegevens in en zie direct je bewegingsprofiel én je persoonlijke krachtplan — meteen te starten in de app.')}
                 </div>
 
                 {error && (
@@ -1656,7 +1664,7 @@ export default function App() {
                   </div>
                 )}
 
-                {scanPath === "pain" && (
+                {scanPath === "pain" ? (
                   <div className="gate-preview">
                     <div className="preview-pill">
                       {t('Bewegingsbeperkingen: geïdentificeerd')}
@@ -1669,6 +1677,21 @@ export default function App() {
                     </div>
                     <div className="preview-pill">
                       {t('Expert Beoordeling: gereed')}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="gate-preview">
+                    <div className="preview-pill">
+                      {t('Bewegingsprofiel: geanalyseerd')}
+                    </div>
+                    <div className="preview-pill">
+                      {t('Sterke punten + groeikans: in kaart')}
+                    </div>
+                    <div className="preview-pill">
+                      {t(scanPath === "fysio" ? 'Opbouwplan: gegenereerd' : 'Krachtplan: gegenereerd')}
+                    </div>
+                    <div className="preview-pill">
+                      {t('2 weken app: klaar')}
                     </div>
                   </div>
                 )}
@@ -2062,7 +2085,7 @@ export default function App() {
               <div className="success-sub">
                 {scanPath === "fysio"
                   ? t('Je coach Max ontvangt nu je volledige profiel en neemt zo snel mogelijk contact met je op om je programma te bespreken.')
-                  : (leadTier === "hot" ? t('Je startschema staat klaar in de app. Omdat je er nu mee aan de slag wilt, neemt coach Max persoonlijk via WhatsApp contact op — of stuur zelf even een appje.') : leadTier === "cold" ? t('Je startschema staat klaar in de app — begin wanneer jij wilt. Geen druk; je coach denkt vrijblijvend mee als je daar behoefte aan hebt.') : t('Je startschema staat klaar in de app. Je coach Max kijkt mee en verfijnt je schema op maat.'))}
+                  : (leadTier === "hot" ? t('Je persoonlijke plan staat klaar in de app. Omdat je er nu mee aan de slag wilt, neemt coach Max persoonlijk via WhatsApp contact op — of stuur zelf even een appje.') : leadTier === "cold" ? t('Je persoonlijke plan staat klaar in de app — begin wanneer jij wilt. Geen druk; je coach denkt vrijblijvend mee als je daar behoefte aan hebt.') : t('Je persoonlijke plan staat klaar in de app. Je coach Max kijkt mee en verfijnt het op maat.'))}
               </div>
               <div className="success-steps">
                 <div className="success-step">
@@ -2074,7 +2097,7 @@ export default function App() {
                 <div className="success-step">
                   <span className="success-step-num">02</span>
                   <div className="success-step-text">
-                    {t('Je persoonlijke startschema staat al klaar in de app.')}
+                    {t('Je persoonlijke plan staat al klaar in de app.')}
                   </div>
                 </div>
                 <div className="success-step">
