@@ -970,10 +970,27 @@ export default function App() {
 
   const openCalendly = async () => {
     const ok = await ensureCalendly();
+    // Neem de gegevens over die de bezoeker al in de scan invulde, zodat ze bij
+    // Calendly niet opnieuw naam/e-mail/telefoon hoeven te typen. Voor een
+    // 'phone call'-event vult `location` het telefoonnummerveld voor.
+    const prefill = {
+      name: userInfo.name || undefined,
+      email: userInfo.email || undefined,
+      location: userInfo.phone || undefined,
+    };
     if (ok && typeof window !== "undefined" && window.Calendly) {
-      window.Calendly.initPopupWidget({ url: CALENDLY_URL });
+      window.Calendly.initPopupWidget({ url: CALENDLY_URL, prefill });
     } else if (typeof window !== "undefined") {
-      window.open(CALENDLY_URL, "_blank", "noopener,noreferrer");
+      // Fallback (geen widget): prefill via URL-parameters.
+      let url = CALENDLY_URL;
+      try {
+        const u = new URL(CALENDLY_URL);
+        if (userInfo.name) u.searchParams.set("name", userInfo.name);
+        if (userInfo.email) u.searchParams.set("email", userInfo.email);
+        if (userInfo.phone) u.searchParams.set("location", userInfo.phone);
+        url = u.toString();
+      } catch {}
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
@@ -1799,12 +1816,12 @@ export default function App() {
                     ? t('Bezig met versturen…')
                     : scanPath === "pain"
                     ? t('Analyseer Mijn Beweging →')
-                    : t('Verstuur Naar Mijn Coach →')}
+                    : t('Toon Mijn Profiel →')}
                 </button>
                 <div className="submit-note">
                   {scanPath === "pain"
                     ? t('Je resultaten worden direct gemaild · Geen spam, ooit')
-                    : t('Je coach ontvangt je volledige profiel · Geen spam, ooit')}
+                    : t('Je profiel + plan staan meteen klaar · Geen spam, ooit')}
                 </div>
               </div>
             </div>

@@ -112,6 +112,8 @@ const dict = {
   'Je persoonlijke plan staat klaar in de app. Je coach Max kijkt mee en verfijnt het op maat.': { en: 'Your personal plan is ready in the app. Your coach Max follows along and fine-tunes it for you.' },
   'Je persoonlijke plan staat al klaar in de app.': { en: 'Your personal plan is already waiting in the app.' },
   'Je coach Max kijkt mee en verfijnt je schema op maat terwijl je traint.': { en: 'Your coach Max follows along and fine-tunes your plan as you train.' },
+  'Toon Mijn Profiel →': { en: 'Show My Profile →' },
+  'Je profiel + plan staan meteen klaar · Geen spam, ooit': { en: 'Your profile + plan are ready right away · No spam, ever' },
   'Pijn of klachten': { en: 'Pain or complaints' },
   'Terugkerende blessures, stijfheid of pijn die je training belemmert.': {
     en: 'Recurring injuries, stiffness or pain that limits your training.',
