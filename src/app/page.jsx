@@ -152,7 +152,7 @@ const STYLES = `
   /* TEXT AREA */
   .text-area {
     width: 100%; min-height: 100px; background: var(--paper); border: 2px solid var(--border);
-    border-radius: var(--radius-sm); color: #ffffff; font-size: 14px; font-family: inherit;
+    border-radius: var(--radius-sm); color: #ffffff; font-size: 16px; font-family: inherit;
     padding: 14px; outline: none; transition: border-color 0.2s; resize: vertical;
   }
   .text-area:focus { border-color: var(--accent); }
@@ -209,7 +209,7 @@ const STYLES = `
   .field-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
   .field-input {
     background: var(--paper); border: 2px solid var(--border); border-radius: var(--radius-sm);
-    color: #ffffff; font-size: 14px;
+    color: #ffffff; font-size: 16px;
     padding: 12px 14px; outline: none; transition: border-color 0.2s; width: 100%; font-family: inherit;
   }
   .field-input:focus { border-color: var(--accent); }
@@ -324,6 +324,25 @@ const STYLES = `
   .success-step { display: flex; gap: 14px; align-items: flex-start; padding: 16px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); }
   .success-step-num { font-size: 12px; font-weight: 800; color: var(--accent); flex-shrink: 0; width: 24px; }
   .success-step-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+
+  /* ─────────── MOBIEL ─────────── */
+  @media (max-width: 640px) {
+    .main { padding: 0 16px 44px; }
+    .landing { padding-top: 40px; }
+    .landing-h1 { margin-bottom: 16px; }
+    .landing-sub { margin-bottom: 28px; }
+    .value-stack { margin-bottom: 28px; gap: 11px; }
+    .cta-row { flex-direction: column; align-items: stretch; gap: 12px; }
+    .cta-btn { width: 100%; justify-content: center; padding: 17px 24px; font-size: 16px; }
+    .cta-note { text-align: center; }
+    .step-container { padding-top: 32px; }
+    .step-sub { margin-bottom: 22px; }
+    .path-card { padding: 18px; }
+    .option-label { font-size: 14px; }
+    .analyzing { padding-top: 64px; }
+    .success { padding-top: 44px; }
+    .submit-btn { padding: 17px; font-size: 16px; }
+  }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes spin { to { transform: rotate(360deg); } }
