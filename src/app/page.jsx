@@ -94,7 +94,11 @@ const STYLES = `
   .step-label { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
 
   /* PATH SELECTION */
+  .step-reassure { font-size: 13px; color: var(--muted-light); margin: -16px 0 24px; line-height: 1.5; }
+  .path-card::after { content: "→"; position: absolute; top: 20px; right: 20px; color: var(--muted-light); font-size: 18px; font-weight: 700; transition: color .2s, transform .2s; }
+  .path-card:hover::after { color: var(--accent); transform: translateX(3px); }
   .path-card {
+    position: relative;
     width: 100%; padding: 24px; border: 1px solid var(--border); background: var(--card);
     border-radius: var(--radius); cursor: pointer; transition: all 0.2s; text-align: left;
     margin-bottom: 12px; display: block;
@@ -325,6 +329,31 @@ const STYLES = `
   .success-step-num { font-size: 12px; font-weight: 800; color: var(--accent); flex-shrink: 0; width: 24px; }
   .success-step-text { font-size: 13px; color: var(--text); line-height: 1.6; }
 
+  /* INSTANT PROFIEL */
+  .profile-card { text-align: left; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin: 0 auto 28px; max-width: 460px; }
+  .profile-kicker { font-size: 11px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .profile-title { font-size: 19px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 14px; letter-spacing: -0.2px; }
+  .profile-score { display: flex; align-items: center; gap: 14px; background: var(--paper); border: 1px solid var(--border); border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; }
+  .profile-ring { width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+  .profile-ring-in { position: absolute; inset: 6px; background: var(--paper); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .profile-ring-in b { font-size: 15px; font-weight: 900; color: #fff; }
+  .profile-score-lbl { font-size: 13px; color: #fff; font-weight: 800; }
+  .profile-insight { display: flex; gap: 11px; background: var(--paper); border: 1px solid var(--border); border-radius: 13px; padding: 12px; margin-bottom: 9px; }
+  .profile-insight.strong { border-color: rgba(74,222,128,0.35); }
+  .profile-insight.grow { border-color: rgba(249,115,22,0.38); }
+  .profile-insight.watch { border-color: rgba(96,165,250,0.35); }
+  .pi-ic { font-size: 19px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
+  .pi-h { font-size: 12.5px; font-weight: 800; color: #fff; margin-bottom: 3px; }
+  .pi-t { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .profile-plan { background: var(--warm); border: 1px solid var(--border); border-radius: 14px; padding: 13px; margin-top: 14px; }
+  .pp-head { font-size: 12.5px; font-weight: 900; color: #fff; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .pp-head span { font-size: 10px; font-weight: 800; color: var(--green); background: var(--green-light); padding: 3px 8px; border-radius: 999px; }
+  .pp-day { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border); font-size: 12.5px; }
+  .pp-day:first-of-type { border-top: none; }
+  .pp-num { width: 20px; height: 20px; border-radius: 6px; background: var(--accent-light); color: var(--accent); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .pp-lbl { color: #fff; font-weight: 700; flex: 1; }
+  .pp-ic { font-size: 15px; }
+
   /* ─────────── MOBIEL ─────────── */
   @media (max-width: 640px) {
     .main { padding: 0 16px 44px; }
@@ -342,6 +371,7 @@ const STYLES = `
     .analyzing { padding-top: 64px; }
     .success { padding-top: 44px; }
     .submit-btn { padding: 17px; font-size: 16px; }
+    .profile-card { padding: 16px; }
   }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
@@ -1035,6 +1065,94 @@ export default function App() {
   }, []);
 
   // ────────── RENDER ──────────
+  // ── Instant Performance/Herstel-profiel (regel-gebaseerd → direct, geen AI-wachttijd) ──
+  const buildProfile = () => {
+    const L = locale === "en";
+    const exp = data.trainingBackground;
+    const days = parseInt(data.trainingDaysAvailable, 10) || 3;
+    const work = data.workSituation;
+    const primaryGoal = (data.goals && data.goals[0]) || "health";
+    const first = ((userInfo.name || "").trim().split(/\s+/)[0]) || (L ? "there" : "");
+
+    if (scanPath === "fysio") {
+      return {
+        kicker: L ? "Recovery & Performance Profile" : "Herstel & Performance Profiel",
+        title: L ? (first ? first + ", your recovery profile is ready" : "Your recovery profile is ready")
+                 : (first ? first + ", je herstelprofiel is klaar" : "Je herstelprofiel is klaar"),
+        score: null,
+        insights: [
+          { icon: "📍", kind: "strong", h: L ? "Where you are now" : "Waar je nu staat", t: L ? "Ready to load in a controlled way — the base is there to build on safely." : "Klaar om gecontroleerd te belasten — de basis is er om veilig op door te bouwen." },
+          { icon: "🎯", kind: "grow", h: L ? "Where we’re heading" : "Waar we naartoe werken", t: L ? "Building strength and stability so you can train fully again without setbacks." : "Kracht en stabiliteit opbouwen zodat je weer volledig kunt trainen zonder terugval." },
+        ],
+        planTitle: L ? "Your rebuild plan" : "Je opbouwplan",
+        plan: [
+          { label: L ? "Activate & stabilise" : "Activeren & stabiliteit", icon: "🩹" },
+          { label: L ? "Mobility + control" : "Mobiliteit + controle", icon: "🌊" },
+          { label: L ? "Controlled loading" : "Gecontroleerd belasten", icon: "💪" },
+        ],
+      };
+    }
+
+    let score = 72;
+    score += ({ never: 0, less_6m: 3, "6m_2y": 6, "2y_4y": 9, "4y_plus": 12 })[exp];
+    if (isNaN(score)) score = 76;
+    score += days >= 5 ? 6 : days >= 4 ? 4 : days >= 3 ? 2 : 0;
+    if (["25-35", "35-45"].includes(data.ageRange)) score += 2;
+    score = Math.max(68, Math.min(94, score));
+
+    const strong = (exp === "4y_plus" || exp === "2y_4y")
+      ? (L ? "Your training experience and recovery — you can handle serious stimulus and progress fast." : "Je trainingservaring en herstelvermogen — je kunt serieuze prikkels aan en bouwt snel op.")
+      : days >= 4
+      ? (L ? "Your commitment — " + days + " days a week gives us plenty of room to get results." : "Je toewijding — " + days + " dagen per week geeft ons veel ruimte om resultaat te boeken.")
+      : (L ? "Your fresh start — no ingrained habits, so we build the right technique from day one." : "Je frisse start — geen ingesleten fouten, dus we bouwen meteen de juiste techniek en gewoontes op.");
+
+    const GROWTH = {
+      muscle: L ? "Structure in progressive overload — a smart plan makes your muscle grow noticeably faster." : "Structuur in progressieve overload — met een slim schema groeit je spiermassa merkbaar sneller.",
+      strength: L ? "Systematically building strength in the big lifts — that’s your biggest win." : "Kracht in de grote basisbewegingen systematisch opbouwen — daar zit je grootste winst.",
+      fat_loss: L ? "Keeping strength while you lose fat — so you hold your shape and metabolism." : "Kracht behouden terwijl je vet verliest — zo hou je je vorm én je stofwisseling hoog.",
+      health: L ? "Consistency and a plan that fits your week — the base for lasting results." : "Consistentie en een schema dat in je week past — de basis voor blijvend resultaat.",
+      athletic: L ? "Linking explosiveness and movement quality to strength — that lifts your performance." : "Explosiviteit en bewegingskwaliteit koppelen aan kracht — daar til je je prestatie mee omhoog.",
+      painless: L ? "Getting stronger without complaints through the right build-up and mobility." : "Sterker worden zónder klachten door de juiste opbouw en mobiliteit.",
+    };
+    const WATCH = {
+      desk: L ? "Lots of sitting stiffens hips and lower back. We build in mobility so you train heavier without complaints." : "Veel zitwerk maakt heupen en onderrug stug. We bouwen mobiliteit in zodat je zwaarder traint zonder klachten.",
+      home: L ? "Working from home blurs work and rest. Fixed training slots keep you consistent." : "Thuiswerken vervaagt werk en rust. Vaste trainingsmomenten houden je consistent.",
+      standing: L ? "Standing a lot needs smart recovery. We dose the load so you stay fresh." : "Veel staan vraagt slim herstel. We doseren de belasting zodat je fris blijft.",
+      physical: L ? "With physical work, recovery counts double. Your plan complements work instead of doubling the load." : "Naast fysiek werk telt herstel dubbel. Je schema vult je werk aan in plaats van je dubbel te belasten.",
+      travel: L ? "Often on the road needs flexibility. Short, effective sessions that work anywhere." : "Veel onderweg vraagt flexibiliteit. Korte, effectieve sessies die overal werken.",
+    };
+    const D = {
+      lower: L ? "Lower body: strength" : "Onderlichaam: kracht",
+      upper: L ? "Upper body" : "Bovenlichaam",
+      push: L ? "Push & pull" : "Duwen & trekken",
+      mob: L ? "Mobility + core" : "Mobiliteit + core",
+      explo: L ? "Explosive full body" : "Volledig lichaam: explosief",
+      full: L ? "Full body" : "Volledig lichaam",
+    };
+    let plan;
+    if (days <= 2) plan = [{ label: D.full + " A", icon: "💪" }, { label: D.full + " B", icon: "🏋️" }];
+    else if (days === 3) plan = [{ label: D.lower, icon: "💪" }, { label: D.upper, icon: "🏋️" }, { label: D.mob, icon: "🌊" }];
+    else if (days === 4) plan = [{ label: D.lower, icon: "💪" }, { label: D.push, icon: "🏋️" }, { label: D.mob, icon: "🌊" }, { label: D.explo, icon: "⚡" }];
+    else plan = [{ label: D.lower, icon: "💪" }, { label: D.upper, icon: "🏋️" }, { label: D.push, icon: "🏋️" }, { label: D.mob, icon: "🌊" }, { label: D.explo, icon: "⚡" }];
+
+    return {
+      kicker: L ? "Performance Profile" : "Performance Profiel",
+      title: L ? (first ? first + ", here’s what your body shows" : "Here’s what your body shows")
+               : (first ? first + ", dit laat je lichaam nu zien" : "Dit laat je lichaam nu zien"),
+      score,
+      scoreLabel: L ? "Trainability" : "Trainbaarheid",
+      insights: [
+        { icon: "💪", kind: "strong", h: L ? "Your strong point" : "Je sterke punt", t: strong },
+        { icon: "🎯", kind: "grow", h: L ? "Your biggest opportunity" : "Je grootste groeikans", t: GROWTH[primaryGoal] || GROWTH.health },
+        { icon: "🪑", kind: "watch", h: L ? "Watch out for" : "Let op", t: WATCH[work] || WATCH.desk },
+      ],
+      planTitle: L ? "Your " + days + "-day strength plan" : "Je " + days + "-daags krachtplan",
+      plan,
+    };
+  };
+
+  const profile = phase === "success" && scanPath !== "pain" ? buildProfile() : null;
+
   return (
     <>
       <style>{STYLES}</style>
@@ -1092,7 +1210,7 @@ export default function App() {
                   {t('Start Je Scan')} <span>→</span>
                 </button>
                 <span className="cta-note">
-                  {t('Gratis · 3 minuten · Geen account nodig')}
+                  {t('Gratis · 3 minuten · direct je resultaat')}
                 </span>
               </div>
             </div>
@@ -1103,6 +1221,7 @@ export default function App() {
             <div className="step-container">
               <div className="step-title">{t('Welkom bij 9toFit')}</div>
               <div className="step-sub">{t('Wat brengt je hier vandaag?')}</div>
+              <div className="step-reassure">{t('Kies wat het best past — je bent in 3 minuten klaar.')}</div>
 
               <button
                 className="path-card fysio"
@@ -2123,6 +2242,36 @@ export default function App() {
                   ? t('Je coach Max ontvangt nu je volledige profiel en neemt zo snel mogelijk contact met je op om je programma te bespreken.')
                   : (leadTier === "hot" ? t('Je persoonlijke plan staat klaar in de app. Omdat je er nu mee aan de slag wilt, neemt coach Max persoonlijk via WhatsApp contact op — of stuur zelf even een appje.') : leadTier === "cold" ? t('Je persoonlijke plan staat klaar in de app — begin wanneer jij wilt. Geen druk; je coach denkt vrijblijvend mee als je daar behoefte aan hebt.') : t('Je persoonlijke plan staat klaar in de app. Je coach Max kijkt mee en verfijnt het op maat.'))}
               </div>
+              {profile && (
+                <div className="profile-card">
+                  <div className="profile-kicker">{profile.kicker}</div>
+                  <div className="profile-title">{profile.title}</div>
+                  {profile.score != null && (
+                    <div className="profile-score">
+                      <div className="profile-ring" style={{ background: `conic-gradient(var(--accent) 0 ${profile.score}%, #2a2a2a ${profile.score}% 100%)` }}>
+                        <div className="profile-ring-in"><b>{profile.score}</b></div>
+                      </div>
+                      <div className="profile-score-lbl"><b>{profile.scoreLabel} {profile.score}/100</b></div>
+                    </div>
+                  )}
+                  {profile.insights.map((ins, i) => (
+                    <div key={i} className={`profile-insight ${ins.kind}`}>
+                      <div className="pi-ic">{ins.icon}</div>
+                      <div><div className="pi-h">{ins.h}</div><div className="pi-t">{ins.t}</div></div>
+                    </div>
+                  ))}
+                  <div className="profile-plan">
+                    <div className="pp-head">{profile.planTitle}<span>{t('Staat klaar')}</span></div>
+                    {profile.plan.map((d, i) => (
+                      <div key={i} className="pp-day">
+                        <span className="pp-num">{i + 1}</span>
+                        <span className="pp-lbl">{d.label}</span>
+                        <span className="pp-ic">{d.icon}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="success-steps">
                 <div className="success-step">
                   <span className="success-step-num">01</span>
