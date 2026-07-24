@@ -80,6 +80,10 @@ const STYLES = `
   }
   .cta-btn:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(249,115,22,0.3); }
   .cta-note { font-size: 11px; color: var(--muted-light); }
+  .landing-cred { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin: -20px 0 32px; }
+  .landing-cred .lc-av { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg,#f97316,#E8590C); display: flex; align-items: center; justify-content: center; font-weight: 900; color: #fff; font-size: 14px; flex-shrink: 0; }
+  .landing-cred .lc-t { font-size: 12px; color: var(--muted); line-height: 1.35; }
+  .landing-cred .lc-t b { color: #fff; display: block; font-size: 12.5px; }
 
   /* STEP CONTAINER */
   .step-container { width: 100%; max-width: 640px; padding-top: 48px; animation: fadeUp 0.5s ease both; }
@@ -1166,6 +1170,8 @@ export default function App() {
                 <span className="kicker-line" />
                 {hook === "kantoorlijf"
                   ? t('Het Kantoorlijf-onderzoek')
+                  : hook === "fysio"
+                  ? t('Gratis bewegingsonderzoek')
                   : t('Gratis Performance Scan')}
               </div>
               <h1 className="landing-h1">
@@ -1174,6 +1180,12 @@ export default function App() {
                     {t('Zittend werk sloopt je')}
                     <br />
                     <em>{t('rug en nek.')}</em> {t('Ontdek wat jouw lichaam nodig heeft.')}
+                  </>
+                ) : hook === "fysio" ? (
+                  <>
+                    {t('Van je blessure af —')}
+                    <br />
+                    <em>{t('zonder te stoppen met trainen.')}</em>
                   </>
                 ) : (
                   <>
@@ -1186,8 +1198,16 @@ export default function App() {
               <p className="landing-sub">
                 {hook === "kantoorlijf"
                   ? t('Doe de gratis 3-minuten scan. Je krijgt een persoonlijke bewegingsanalyse, een concreet plan op jouw klacht, én 2 weken de 9toFit-app om er meteen mee aan de slag te gaan.')
+                  : hook === "fysio"
+                  ? t('Beantwoord de vragen die je normaal in de praktijk zou krijgen. Je krijgt direct een persoonlijk profiel en een gratis programma — of je nu een klacht hebt of gewoon sterker wilt worden.')
                   : t('Sterker worden, klachten oplossen of terug na een blessure — in 3 minuten ken je je sterke punten, je grootste groeikans én heb je een plan om vandaag te starten.')}
               </p>
+              {hook === "fysio" && (
+                <div className="landing-cred">
+                  <div className="lc-av">M</div>
+                  <div className="lc-t"><b>Gemaakt door Max Trentelman</b>{t('Performance & herstelcoach · 9toFit')}</div>
+                </div>
+              )}
               <div className="value-stack">
                 <div className="vs-item">
                   <span className="vs-ic">✓</span>
@@ -1223,6 +1243,7 @@ export default function App() {
               <div className="step-sub">{t('Wat brengt je hier vandaag?')}</div>
               <div className="step-reassure">{t('Kies wat het best past — je bent in 3 minuten klaar.')}</div>
 
+              {hook !== "fysio" && (
               <button
                 className="path-card fysio"
                 onClick={() => handlePathSelect("fysio")}
@@ -1234,6 +1255,7 @@ export default function App() {
                 </div>
                 <span className="path-tag blue">{t('Opbouwplan · Intake volgt')}</span>
               </button>
+              )}
 
               <button
                 className="path-card fitness"
@@ -1259,7 +1281,7 @@ export default function App() {
                   {t('Terugkerende blessures, stijfheid of pijn die je training belemmert.')}
                 </div>
                 <span className="path-tag orange">
-                  {t('Bewegingsanalyse · 7-daags plan')}
+                  {t('Gratis bewegingsonderzoek · 7-daags plan')}
                 </span>
               </button>
 

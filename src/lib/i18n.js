@@ -83,6 +83,12 @@ const dict = {
   'Ontdek je grootste groeikans + een plan om nu te starten.': { en: 'Discover your biggest growth area + a plan to start now.' },
   'Profiel · Krachtplan klaar': { en: 'Profile · Strength plan ready' },
   'Bewegingsanalyse · 7-daags plan': { en: 'Movement analysis · 7-day plan' },
+  'Gratis bewegingsonderzoek': { en: 'Free movement assessment' },
+  'Van je blessure af —': { en: 'Rid of your injury —' },
+  'zonder te stoppen met trainen.': { en: 'without stopping training.' },
+  'Beantwoord de vragen die je normaal in de praktijk zou krijgen. Je krijgt direct een persoonlijk profiel en een gratis programma — of je nu een klacht hebt of gewoon sterker wilt worden.': { en: 'Answer the questions you would normally get at a practice intake. You instantly get a personal profile and a free program — whether you have a complaint or just want to get stronger.' },
+  'Performance & herstelcoach · 9toFit': { en: 'Performance & recovery coach · 9toFit' },
+  'Gratis bewegingsonderzoek · 7-daags plan': { en: 'Free movement assessment · 7-day plan' },
 
   // ────────── EN-dekking aanvullen (pre-existing gaten) + startschema→plan ──────────
   'Het Kantoorlijf-onderzoek': { en: 'The Office-Body study' },
