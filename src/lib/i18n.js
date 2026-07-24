@@ -422,6 +422,65 @@ const dict = {
   'Welke bewegingen verergeren de pijn?': {
     en: 'Which movements worsen the pain?',
   },
+
+  // ── NIEUW: klinische verdieping ──
+  'Hoe is de klacht ontstaan?': { en: 'How did the complaint start?' },
+  'Het ontstaan zegt veel over de oorzaak en de juiste aanpak.': {
+    en: 'How it started tells us a lot about the cause and the right approach.',
+  },
+  'Wat verlicht de klacht?': { en: 'What eases the complaint?' },
+  'Herken je een van deze signalen?': {
+    en: 'Do you recognise any of these signs?',
+  },
+  'Belangrijk om serieus te screenen voordat we een plan opstellen.': {
+    en: 'Important to screen carefully before we build a plan.',
+  },
+  'Welke bewegingen lukken niet pijnvrij?': {
+    en: 'Which movements are not pain-free?',
+  },
+  'Dit bepaalt hoe we je klacht inschatten en aanpakken.': {
+    en: 'This determines how we assess and approach your complaint.',
+  },
+  'Dit helpt ons je profiel en aanpak op maat te maken.': {
+    en: 'This helps us tailor your profile and approach.',
+  },
+  'Plotseling / na een moment': { en: 'Suddenly / after a moment' },
+  'Verkeerde beweging, tillen of sport': { en: 'Wrong movement, lifting or sport' },
+  'Geleidelijk opgebouwd': { en: 'Built up gradually' },
+  'Sluipend erger geworden': { en: 'Gradually got worse' },
+  'Na periode van inactiviteit': { en: 'After a period of inactivity' },
+  'Na rust, ziekte of veel zitten': { en: 'After rest, illness or lots of sitting' },
+  'Geen duidelijke aanleiding': { en: 'No clear cause' },
+  'Zomaar ontstaan': { en: 'Came out of nowhere' },
+  'Rust': { en: 'Rest' },
+  'Even niets doen lucht op': { en: 'Doing nothing for a bit relieves it' },
+  'Bewegen / warm worden': { en: 'Moving / warming up' },
+  'Losser na opwarmen': { en: 'Looser after warming up' },
+  'Rekken / mobiliseren': { en: 'Stretching / mobilising' },
+  'Stretchen helpt': { en: 'Stretching helps' },
+  'Warmte of kou': { en: 'Heat or cold' },
+  'Warmtepakking of ijs': { en: 'Heat pack or ice' },
+  'Niets helpt echt': { en: 'Nothing really helps' },
+  'Blijft constant aanwezig': { en: 'Stays constantly present' },
+  'Uitstraling of tintelingen': { en: 'Radiating pain or tingling' },
+  'Naar arm, been, hand of voet': { en: 'Into arm, leg, hand or foot' },
+  'Krachtverlies of gevoelloosheid': { en: 'Loss of strength or numbness' },
+  'Spierzwakte of doof gevoel': { en: 'Muscle weakness or numb feeling' },
+  "Pijn die je 's nachts wakker maakt": { en: 'Pain that wakes you at night' },
+  'Wordt niet minder in rust': { en: "Doesn't ease with rest" },
+  'Nee, niets hiervan': { en: 'No, none of these' },
+  'Geen van deze signalen': { en: 'None of these signs' },
+  'Door de knieën zakken': { en: 'Squatting down' },
+  'Hurken doet pijn of lukt niet': { en: 'Squatting hurts or is impossible' },
+  'Boven je hoofd reiken': { en: 'Reaching overhead' },
+  'Arm heffen beperkt of pijnlijk': { en: 'Raising the arm is limited or painful' },
+  'Op één been staan': { en: 'Standing on one leg' },
+  'Balans of stabiliteit slecht': { en: 'Poor balance or stability' },
+  'Bukken naar je tenen': { en: 'Bending to your toes' },
+  'Voorover buigen beperkt': { en: 'Forward bending is limited' },
+  'Deze gaan allemaal prima': { en: 'These are all fine' },
+  'Geen beperking hierin': { en: 'No limitation here' },
+
   'Bekijk Mijn Analyse →': { en: 'See My Analysis →' },
 
   // ────────── GATE (extended) ──────────

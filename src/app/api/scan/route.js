@@ -147,7 +147,8 @@ Rules for risk assessment:
 - High risk: pain intensity 7+, duration over 3 months, no treatment, high-impact triggers
 - Moderate risk: pain intensity 4-6, duration 1-3 months, some triggers
 - Low risk: pain intensity 1-3, recent onset, limited triggers
-- Always consider work type (desk work = postural risk, manual = overuse risk)`;
+- Always consider work type (desk work = postural risk, manual = overuse risk)
+- Red flags: if warning signs are reported (radiating pain or tingling, numbness or weakness, or night pain that wakes them), raise the overall risk and, in coach_insight, calmly recommend a hands-on assessment with Max or a physiotherapist before heavy loading — never alarm, frame it as the prudent next step`;
 
     const userMessage = `Patient assessment data:
 - Pain location(s): ${JSON.stringify(answers.pain_location)}
@@ -155,6 +156,10 @@ Rules for risk assessment:
 - Movement triggers: ${JSON.stringify(answers.movement_triggers)}
 - Duration: ${answers.pain_duration}
 - Pain intensity: ${answers.pain_intensity}/10
+- How it started (onset): ${answers.pain_onset}
+- What eases it: ${JSON.stringify(answers.pain_easers)}
+- Warning signs / red flags: ${JSON.stringify(answers.pain_red_flags)}
+- Functional limitations (movements not pain-free): ${JSON.stringify(answers.functional_limitations)}
 - Work type: ${answers.work_type}
 - Training history: ${answers.training_history}
 - Activity level: ${answers.activity_level} days/week

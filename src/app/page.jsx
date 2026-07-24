@@ -502,6 +502,36 @@ const PAIN_DURATIONS = [
   { icon: "♾️", label: "Meer dan een jaar", id: "longterm", sub: "Langdurige klacht" },
 ];
 
+const PAIN_ONSETS = [
+  { icon: "⚡", label: "Plotseling / na een moment", id: "sudden", sub: "Verkeerde beweging, tillen of sport" },
+  { icon: "🌊", label: "Geleidelijk opgebouwd", id: "gradual", sub: "Sluipend erger geworden" },
+  { icon: "🛋️", label: "Na periode van inactiviteit", id: "inactivity", sub: "Na rust, ziekte of veel zitten" },
+  { icon: "❓", label: "Geen duidelijke aanleiding", id: "unknown", sub: "Zomaar ontstaan" },
+];
+
+const PAIN_EASERS = [
+  { icon: "🛌", label: "Rust", id: "rest", sub: "Even niets doen lucht op" },
+  { icon: "🔥", label: "Bewegen / warm worden", id: "movement", sub: "Losser na opwarmen" },
+  { icon: "🧘", label: "Rekken / mobiliseren", id: "stretch", sub: "Stretchen helpt" },
+  { icon: "🧊", label: "Warmte of kou", id: "temperature", sub: "Warmtepakking of ijs" },
+  { icon: "🚫", label: "Niets helpt echt", id: "nothing", sub: "Blijft constant aanwezig" },
+];
+
+const PAIN_RED_FLAGS = [
+  { icon: "⚡", label: "Uitstraling of tintelingen", id: "radiating", sub: "Naar arm, been, hand of voet" },
+  { icon: "🦵", label: "Krachtverlies of gevoelloosheid", id: "weakness", sub: "Spierzwakte of doof gevoel" },
+  { icon: "🌙", label: "Pijn die je 's nachts wakker maakt", id: "night_pain", sub: "Wordt niet minder in rust" },
+  { icon: "✅", label: "Nee, niets hiervan", id: "none", sub: "Geen van deze signalen" },
+];
+
+const PAIN_FUNCTIONS = [
+  { icon: "🏋️", label: "Door de knieën zakken", id: "squat", sub: "Hurken doet pijn of lukt niet" },
+  { icon: "🙆", label: "Boven je hoofd reiken", id: "overhead", sub: "Arm heffen beperkt of pijnlijk" },
+  { icon: "🧍", label: "Op één been staan", id: "balance", sub: "Balans of stabiliteit slecht" },
+  { icon: "🤸", label: "Bukken naar je tenen", id: "forward_bend", sub: "Voorover buigen beperkt" },
+  { icon: "✅", label: "Deze gaan allemaal prima", id: "none", sub: "Geen beperking hierin" },
+];
+
 const ANALYZE_STEPS = [
   "Pijnpatroon data verwerken…",
   "Bewegingsbeperkingen in kaart brengen…",
@@ -565,6 +595,10 @@ export default function App() {
     painDuration: "",
     painTiming: "",
     painTriggers: [],
+    painOnset: "",
+    painEasers: [],
+    painRedFlags: [],
+    painFunction: [],
   });
 
   // User info (gate)
@@ -679,20 +713,18 @@ export default function App() {
     // Pijn-pad opent met de makkelijkste, meest herkenbare vraag ("waar zit het?")
     // zodat een koude lead direct momentum pakt vóór de zwaardere profielvragen.
     if (scanPath === "pain") {
-      const steps = [
-        "pain_location",   // where + when  (laagdrempelige opener)
-        "pain_details",    // intensity + duration
-        "about_you",       // age + training background
-        "goals",           // goals + year goal text
-        "intent",          // koopintentie (v2 kwalificatie)
-        "situation",       // work situation + hours + training days + urgency
+      // Klinische stappen eerst — dit voelt als een écht bewegingsonderzoek,
+      // pas daarna de profiel-/kwalificatievragen.
+      return [
+        "pain_location",   // waar + wanneer
+        "pain_details",    // intensiteit + duur
+        "pain_onset",      // ontstaan + wat verlicht (klinisch)
+        "pain_triggers",   // verergerende bewegingen (altijd tonen)
+        "pain_context",    // rode vlaggen + functionele test (klinisch)
+        "about_you",       // leeftijd + achtergrond
+        "intent",          // koopintentie (kwalificatie, aan het eind)
+        "situation",       // werk + dagen + urgentie
       ];
-      // Tier-diepte: koude/oriënterende leads krijgen minder frictie —
-      // de trigger-stap (minst kritisch) wordt voor hen overgeslagen.
-      if (data.intent !== "explore") {
-        steps.push("pain_triggers"); // movement triggers
-      }
-      return steps;
     }
     // Fitness/fysio: profiel-vragen (geen pijn-stappen; fysio-context in de gate).
     return [
@@ -726,6 +758,10 @@ export default function App() {
         return painData.painIntensity > 0 && painData.painDuration;
       case "pain_triggers":
         return painData.painTriggers.length > 0;
+      case "pain_onset":
+        return !!painData.painOnset && painData.painEasers.length > 0;
+      case "pain_context":
+        return painData.painRedFlags.length > 0 && painData.painFunction.length > 0;
       default:
         return false;
     }
@@ -779,6 +815,10 @@ export default function App() {
           movement_triggers: painData.painTriggers,
           pain_duration: painData.painDuration,
           pain_intensity: painData.painIntensity,
+          pain_onset: painData.painOnset,
+          pain_easers: painData.painEasers,
+          pain_red_flags: painData.painRedFlags,
+          functional_limitations: painData.painFunction,
           work_type: data.workSituation,
           training_history: data.trainingBackground,
           activity_level: data.trainingDaysAvailable,
@@ -816,6 +856,10 @@ export default function App() {
             movement_triggers: painData.painTriggers,
             pain_duration: painData.painDuration,
             pain_intensity: painData.painIntensity,
+            pain_onset: painData.painOnset,
+            pain_easers: painData.painEasers,
+            pain_red_flags: painData.painRedFlags,
+            functional_limitations: painData.painFunction,
             work_type: data.workSituation,
             training_history: data.trainingBackground,
             activity_level: data.trainingDaysAvailable,
@@ -931,6 +975,10 @@ export default function App() {
         pain_duration: isPain ? painData.painDuration : null,
         pain_timing: isPain ? painData.painTiming : null,
         pain_triggers: isPain ? painData.painTriggers : [],
+        pain_onset: isPain ? painData.painOnset : null,
+        pain_easers: isPain ? painData.painEasers : [],
+        pain_red_flags: isPain ? painData.painRedFlags : [],
+        functional_limitations: isPain ? painData.painFunction : [],
         scanner_ai_result: aiResult || null,
         event_id: eventId,
         fbp,
@@ -1328,7 +1376,7 @@ export default function App() {
                   <div className="step-label">{t('Over jou')}</div>
                   <div className="step-title">{t('Vertel ons over jezelf')}</div>
                   <div className="step-sub">
-                    {t('Dit helpt je coach om het perfecte schema te bouwen.')}
+                    {t('Dit helpt ons je profiel en aanpak op maat te maken.')}
                   </div>
 
                   <div className="section-label">{t('Leeftijd')}</div>
@@ -1603,7 +1651,7 @@ export default function App() {
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      {scanPath === "pain" ? t('Volgende →') : t('Verder →')}
+                      {scanPath === "pain" ? t('Bekijk Mijn Analyse →') : t('Verder →')}
                     </button>
                   </div>
                 </div>
@@ -1686,7 +1734,7 @@ export default function App() {
                     {t('Hoe erg en hoe lang heb je last?')}
                   </div>
                   <div className="step-sub">
-                    {t('Dit bepaalt de aanpak en urgentie van je plan.')}
+                    {t('Dit bepaalt hoe we je klacht inschatten en aanpakken.')}
                   </div>
 
                   <div className="section-label">
@@ -1786,11 +1834,156 @@ export default function App() {
                       onClick={nextStep}
                       disabled={!canProceed()}
                     >
-                      {t('Bekijk Mijn Analyse →')}
+                      {t('Volgende →')}
                     </button>
                   </div>
                 </div>
               )}
+
+              {/* ── STEP: Pain Onset (mechanism + easing) ── */}
+              {currentStepId === "pain_onset" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
+                  <div className="step-title">
+                    {t('Hoe is de klacht ontstaan?')}
+                  </div>
+                  <div className="step-sub">
+                    {t('Het ontstaan zegt veel over de oorzaak en de juiste aanpak.')}
+                  </div>
+
+                  <div className="options-grid">
+                    {PAIN_ONSETS.map((o) => (
+                      <button
+                        key={o.id}
+                        className={`option-card ${painData.painOnset === o.id ? "selected" : ""}`}
+                        onClick={() =>
+                          setPainData((d) => ({ ...d, painOnset: o.id }))
+                        }
+                      >
+                        <span className="option-icon">{o.icon}</span>
+                        <span className="option-label">{t(o.label)}</span>
+                        <span className="option-sub">{t(o.sub)}</span>
+                        <span className="option-check">✓</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="section-label" style={{ marginTop: "28px" }}>
+                    {t('Wat verlicht de klacht?')}
+                  </div>
+                  <div className="options-grid">
+                    {PAIN_EASERS.map((e) => {
+                      const sel = painData.painEasers.includes(e.id);
+                      return (
+                        <button
+                          key={e.id}
+                          className={`option-card ${sel ? "selected" : ""}`}
+                          onClick={() =>
+                            setPainData((d) => ({
+                              ...d,
+                              painEasers: toggleMulti(d.painEasers, e.id),
+                            }))
+                          }
+                        >
+                          <span className="option-icon">{e.icon}</span>
+                          <span className="option-label">{t(e.label)}</span>
+                          <span className="option-sub">{t(e.sub)}</span>
+                          <span className="option-check">✓</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>
+                      {t('← Terug')}
+                    </button>
+                    <button
+                      className="next-btn"
+                      onClick={nextStep}
+                      disabled={!canProceed()}
+                    >
+                      {t('Volgende →')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP: Pain Context (red flags + functional test) ── */}
+              {currentStepId === "pain_context" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
+                  <div className="step-title">
+                    {t('Herken je een van deze signalen?')}
+                  </div>
+                  <div className="step-sub">
+                    {t('Belangrijk om serieus te screenen voordat we een plan opstellen.')}
+                  </div>
+
+                  <div className="options-grid">
+                    {PAIN_RED_FLAGS.map((rf) => {
+                      const sel = painData.painRedFlags.includes(rf.id);
+                      return (
+                        <button
+                          key={rf.id}
+                          className={`option-card ${sel ? "selected" : ""}`}
+                          onClick={() =>
+                            setPainData((d) => ({
+                              ...d,
+                              painRedFlags: toggleMulti(d.painRedFlags, rf.id),
+                            }))
+                          }
+                        >
+                          <span className="option-icon">{rf.icon}</span>
+                          <span className="option-label">{t(rf.label)}</span>
+                          <span className="option-sub">{t(rf.sub)}</span>
+                          <span className="option-check">✓</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="section-label" style={{ marginTop: "28px" }}>
+                    {t('Welke bewegingen lukken niet pijnvrij?')}
+                  </div>
+                  <div className="options-grid">
+                    {PAIN_FUNCTIONS.map((fn) => {
+                      const sel = painData.painFunction.includes(fn.id);
+                      return (
+                        <button
+                          key={fn.id}
+                          className={`option-card ${sel ? "selected" : ""}`}
+                          onClick={() =>
+                            setPainData((d) => ({
+                              ...d,
+                              painFunction: toggleMulti(d.painFunction, fn.id),
+                            }))
+                          }
+                        >
+                          <span className="option-icon">{fn.icon}</span>
+                          <span className="option-label">{t(fn.label)}</span>
+                          <span className="option-sub">{t(fn.sub)}</span>
+                          <span className="option-check">✓</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>
+                      {t('← Terug')}
+                    </button>
+                    <button
+                      className="next-btn"
+                      onClick={nextStep}
+                      disabled={!canProceed()}
+                    >
+                      {t('Volgende →')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
