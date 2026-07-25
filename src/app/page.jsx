@@ -211,7 +211,7 @@ const STYLES = `
     font-size: 10px; font-weight: 600; color: var(--muted-light); filter: blur(3px);
   }
   .gate-error { font-size: 12px; font-weight: 600; color: #ef4444; margin-bottom: 16px; padding: 12px 14px; border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); border-radius: var(--radius-sm); }
-  .gate-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+  .gate-fields { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 18px; }
   @media(max-width:560px){ .gate-fields { grid-template-columns: 1fr; } }
   .field-wrap { display: flex; flex-direction: column; gap: 6px; }
   .field-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
