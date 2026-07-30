@@ -39,6 +39,10 @@ const STYLES = `
     --radius: 16px;
     --radius-sm: 12px;
   }
+  /* scrollbar-gutter: stable — de scrollbar verschijnt/verdwijnt per stap
+     (korte vs. lange vraag), waardoor de hele kolom horizontaal versprong
+     en snelle klikken op de verkeerde kaart landden. */
+  html { scrollbar-gutter: stable; }
   html, body { height: 100%; background: var(--paper); }
   body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; background: var(--paper); }
   .app { min-height: 100vh; display: flex; flex-direction: column; background: var(--paper); }
