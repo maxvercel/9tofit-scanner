@@ -70,6 +70,25 @@ export async function POST(request) {
       )
     }
 
+    // ── Veiligheidspoort: bij echte alarmsignalen genereren we NOOIT een
+    // oefenplan. De frontend stuurt deze leads al naar de check-call-route;
+    // dit vangt directe API-calls en eventuele frontend-bugs af.
+    const redFlags = (Array.isArray(answers.pain_red_flags) ? answers.pain_red_flags : []).filter(
+      (f) => f && f !== 'none'
+    )
+    if (redFlags.length > 0) {
+      return Response.json(
+        {
+          success: false,
+          error: isEn
+            ? 'Based on your answers we first recommend a free check-up call instead of an online exercise plan.'
+            : 'Op basis van je antwoorden adviseren we eerst een gratis check-gesprek in plaats van een online oefenplan.',
+          red_flags: redFlags,
+        },
+        { status: 200 }
+      )
+    }
+
     const langInstruction = isEn
       ? `IMPORTANT: All text output must be in English.`
       : `BELANGRIJK: ALLE tekst moet in het Nederlands zijn — óók alle namen, titels en labels (bewegingsbeperkingen, oefeningen, dag-titels, risicofactoren). Gebruik GEEN Engelse (vak)termen; vertaal alles naar natuurlijk Nederlands. Bijvoorbeeld: 'Zit-naar-sta-controle' i.p.v. 'Sit-to-Stand', 'Langdurig zitten' i.p.v. 'Prolonged Sitting', 'Voorwaartse kophouding' i.p.v. 'Forward Head Posture'. Schrijf 'nek' (nooit 'neck') en 'rug' (nooit 'back').`;

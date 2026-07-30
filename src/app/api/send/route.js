@@ -120,7 +120,7 @@ const CALENDLY_URL = process.env.NEXT_PUBLIC_CALENDLY_URL || 'https://calendly.c
 
 export async function POST(request) {
   try {
-    const { name, email, result, answers, type, scanPath, extraData, lang } = await request.json();
+    const { name, email, phone, result, answers, type, scanPath, extraData, lang } = await request.json();
 
     console.log('Send route called for:', email, 'type:', type || scanPath, 'risk:', result?.overall_risk, 'lang:', lang || 'nl');
 
@@ -128,12 +128,17 @@ export async function POST(request) {
     const coachEmail = process.env.NEXT_PUBLIC_COACH_EMAIL || 'max@9tofit.nl';
 
     // ── Determine which flow we're in ──
-    const isPainPath = scanPath === 'pain' || type === 'pain_performance';
+    const isRedFlag = type === 'pain_red_flag';
+    const isPainPath = !isRedFlag && (scanPath === 'pain' || type === 'pain_performance');
     const isFysioPath = scanPath === 'fysio' || type === 'fysio_intake';
     const isFitnessPath = scanPath === 'fitness' || type === 'fitness_intake';
 
+    // ── RED FLAG PATH: geen oefenplan — advies + alarm-brief naar de coach ──
+    if (isRedFlag) {
+      await sendRedFlagEmails({ name, email, phone, answers, fromEmail, coachEmail, extraData, lang });
+    }
     // ── PAIN PATH: Full AI analysis emails ──
-    if (isPainPath && result) {
+    else if (isPainPath && result) {
       await sendPainEmails({ name, email, result, answers, fromEmail, coachEmail, extraData, lang });
     }
     // ── FITNESS/FYSIO PATH: Intake confirmation + coach brief ──
@@ -145,7 +150,7 @@ export async function POST(request) {
     const { MAILCHIMP_API_KEY, MAILCHIMP_SERVER, MAILCHIMP_AUDIENCE_ID } = process.env;
     if (MAILCHIMP_API_KEY && MAILCHIMP_SERVER && MAILCHIMP_AUDIENCE_ID) {
       const parts = name.trim().split(' ');
-      const tag = isPainPath ? 'pain-performance-scan' : isFysioPath ? 'fysio-intake' : 'fitness-intake';
+      const tag = isRedFlag ? 'pain-red-flag' : isPainPath ? 'pain-performance-scan' : isFysioPath ? 'fysio-intake' : 'fitness-intake';
       const mcRes = await fetch(`https://${MAILCHIMP_SERVER}.api.mailchimp.com/3.0/lists/${MAILCHIMP_AUDIENCE_ID}/members`, {
         method: 'POST',
         headers: {
@@ -172,6 +177,205 @@ export async function POST(request) {
     console.error('Send error:', error.message);
     return Response.json({ success: false, error: error.message }, { status: 500 });
   }
+}
+
+// ════════════════════════════════════════
+// RED FLAG PATH EMAILS — géén oefenplan; advies voor de klant + alarm-brief coach
+// ════════════════════════════════════════
+
+// Simpele HTML-escape voor door de bezoeker ingevulde velden in mail-HTML.
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+const RED_FLAG_LABELS = {
+  radiating: { nl: 'Uitstraling of tintelingen (naar arm, been, hand of voet)', en: 'Radiating pain or tingling (into arm, leg, hand or foot)' },
+  weakness: { nl: 'Krachtverlies of gevoelloosheid', en: 'Loss of strength or numbness' },
+  night_pain: { nl: "Pijn die 's nachts wakker maakt", en: 'Pain that wakes you at night' },
+};
+
+async function sendRedFlagEmails({ name, email, phone, answers, fromEmail, coachEmail, extraData, lang }) {
+  const isEn = lang === 'en';
+  const safeName = esc(name);
+  const flags = (Array.isArray(answers?.pain_red_flags) ? answers.pain_red_flags : []).filter(f => f !== 'none');
+  const flagList = flags
+    .map(f => RED_FLAG_LABELS[f]?.[isEn ? 'en' : 'nl'] || esc(f))
+    .map(label => `<div style="font-size:13px;color:#e4e4e7;padding:8px 0;border-bottom:1px solid #27272a;">⚠️ ${label}</div>`)
+    .join('');
+
+  // ── Client email: rustig, duidelijk, call-eerst ──
+  const clientHtml = `<!DOCTYPE html>
+<html lang="${isEn ? 'en' : 'nl'}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#09090b;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#09090b;padding:40px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+  <tr><td style="padding:0 0 32px 0;">
+    <div style="font-size:11px;font-weight:700;letter-spacing:4px;color:#ffffff;text-transform:uppercase;">9TOFIT</div>
+    <div style="font-size:8px;letter-spacing:3px;color:#71717a;text-transform:uppercase;margin-top:4px;">PERFORMANCE COACHING</div>
+  </td></tr>
+  <tr><td style="padding:0 0 24px 0;"><div style="width:48px;height:3px;background:#f97316;border-radius:2px;"></div></td></tr>
+  <tr><td style="padding:0 0 12px 0;">
+    <div style="font-size:10px;letter-spacing:3px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;">${isEn ? 'Personal advice' : 'Persoonlijk advies'}</div>
+  </td></tr>
+  <tr><td style="padding:0 0 24px 0;">
+    <div style="font-size:32px;font-weight:900;color:#ffffff;line-height:1.05;text-transform:uppercase;letter-spacing:1px;">${safeName},<br>${isEn ? 'let’s look at this together first.' : 'eerst even goed kijken.'}</div>
+  </td></tr>
+  <tr><td style="padding:0 0 24px 0;">
+    <div style="font-size:15px;color:#a1a1aa;line-height:1.8;">
+      ${isEn
+        ? 'In your scan you indicated one or more signals we take seriously. Nothing to panic about — these signals are common and usually very treatable. But prescribing exercises online without checking them properly first would not be professional.'
+        : 'In je scan gaf je een of meer signalen aan die we serieus nemen. Geen reden voor paniek — deze signalen komen vaak voor en zijn meestal goed te verhelpen. Maar er zonder goede check online oefeningen op voorschrijven zou niet professioneel zijn.'}
+    </div>
+  </td></tr>
+  <tr><td style="padding:0 0 24px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid #27272a;border-radius:8px;">
+      <tr><td style="padding:20px 24px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:10px;">${isEn ? 'What you indicated' : 'Wat je aangaf'}</div>
+        ${flagList}
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 0 24px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid rgba(249,115,22,0.35);border-radius:8px;">
+      <tr><td style="padding:24px;">
+        <div style="font-size:9px;letter-spacing:2px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${isEn ? 'Recommended next step' : 'Aanbevolen volgende stap'}</div>
+        <div style="font-size:18px;font-weight:900;color:#ffffff;margin-bottom:8px;line-height:1.1;">${isEn ? 'Book your free check-up call' : 'Plan je gratis check-gesprek'}</div>
+        <div style="font-size:13px;color:#a1a1aa;line-height:1.7;margin-bottom:16px;">
+          ${isEn
+            ? 'In a short call Max goes through your signals with you and tells you right away what is safe to do. Often you can simply get started afterwards — with a plan that fits your situation.'
+            : 'In een kort gesprek loopt Max je signalen met je door en hoor je direct wat wél veilig kan. Vaak kun je daarna gewoon aan de slag — met een plan dat bij jouw situatie past.'}
+        </div>
+        <a href="${CALENDLY_URL}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;border-radius:8px;">${isEn ? 'BOOK FREE CALL →' : 'PLAN GRATIS GESPREK →'}</a>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 0 24px 0;">
+    <div style="font-size:12px;color:#71717a;line-height:1.7;">
+      ${isEn
+        ? 'Important: with sudden severe symptoms, fever, or loss of bladder or bowel control, contact your GP today.'
+        : 'Belangrijk: bij plotselinge hevige klachten, koorts of verlies van controle over blaas of darmen, neem vandaag nog contact op met je huisarts.'}
+    </div>
+  </td></tr>
+  <tr><td style="padding:8px 0 0 0;">
+    <div style="font-size:9px;letter-spacing:2px;color:#3f3f46;text-transform:uppercase;font-family:'Courier New',monospace;text-align:center;">9toFit Performance Coaching · 9tofit.nl</div>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  // ── Coach email: alarm-brief met alle klinische antwoorden ──
+  const rows = [
+    { q: 'Alarmsignalen', a: flags.map(f => RED_FLAG_LABELS[f]?.nl || esc(f)).join(' · ') || '—' },
+    { q: 'Pijnlocatie(s)', a: Array.isArray(answers?.pain_location) ? esc(answers.pain_location.join(', ')) : '—' },
+    { q: 'Pijnintensiteit', a: `${esc(answers?.pain_intensity ?? '—')}/10` },
+    { q: 'Duur', a: esc(answers?.pain_duration || '—') },
+    { q: 'Wanneer pijn', a: esc(answers?.pain_timing || '—') },
+    { q: 'Ontstaan', a: esc(answers?.pain_onset || '—') },
+    { q: 'Wat verlicht', a: Array.isArray(answers?.pain_easers) ? esc(answers.pain_easers.join(', ')) : '—' },
+    { q: 'Bewegingstriggers', a: Array.isArray(answers?.movement_triggers) ? esc(answers.movement_triggers.join(', ')) : '—' },
+    { q: 'Beperkte bewegingen', a: Array.isArray(answers?.functional_limitations) ? esc(answers.functional_limitations.join(', ')) : '—' },
+    { q: 'Leeftijd', a: esc(extraData?.age_range || '—') },
+    { q: 'Werksituatie', a: esc(answers?.work_type || '—') },
+    { q: 'Trainingsachtergrond', a: esc(answers?.training_history || '—') },
+    { q: 'Start urgentie', a: esc(extraData?.start_urgency || '—') },
+  ].map(row => `
+    <tr>
+      <td style="padding:10px 14px;border-bottom:1px solid #f0f0f0;width:40%;vertical-align:top;"><span style="font-size:11px;font-weight:700;color:#333;text-transform:uppercase;letter-spacing:0.5px;">${row.q}</span></td>
+      <td style="padding:10px 14px;border-bottom:1px solid #f0f0f0;vertical-align:top;"><span style="font-size:13px;color:#111;">${row.a}</span></td>
+    </tr>`).join('');
+
+  const coachHtml = `<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f0f0f0;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;">
+<tr><td align="center">
+<table width="640" cellpadding="0" cellspacing="0" style="max-width:640px;width:100%;">
+  <tr><td style="background:#111;padding:20px 28px;border-bottom:4px solid #ff4444;">
+    <div style="font-size:18px;font-weight:900;letter-spacing:3px;color:#fff;text-transform:uppercase;">9toFit — Coach Alarm Brief</div>
+    <div style="font-size:10px;letter-spacing:2px;color:#555;text-transform:uppercase;margin-top:4px;">Pijn-scan met alarmsignalen</div>
+  </td></tr>
+  <tr><td style="background:#ff4444;padding:14px 28px;">
+    <div style="font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:2px;">🚩 ALARMSIGNALEN — GEEN OEFENPLAN VERSTUURD — NEEM VANDAAG CONTACT OP</div>
+  </td></tr>
+  <tr><td style="background:#fff;padding:24px 28px 0;">
+    <div style="font-size:10px;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:12px;">Cliënt</div>
+    <div style="font-size:22px;font-weight:900;color:#111;margin-bottom:4px;">${safeName}</div>
+    <a href="mailto:${esc(email)}" style="font-size:14px;color:#0066cc;text-decoration:none;">${esc(email)}</a>
+    ${phone ? `<div style="font-size:14px;color:#111;margin-top:4px;">📱 <a href="tel:${esc(phone)}" style="color:#0066cc;text-decoration:none;">${esc(phone)}</a></div>` : '<div style="font-size:12px;color:#888;margin-top:4px;">Geen telefoonnummer achtergelaten — mail voor een belafspraak.</div>'}
+  </td></tr>
+  <tr><td style="background:#fff;padding:20px 28px 0;">
+    <div style="height:1px;background:#eee;"></div>
+    <div style="font-size:10px;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-top:20px;margin-bottom:12px;">Antwoorden</div>
+  </td></tr>
+  <tr><td style="background:#fff;padding:0 28px 20px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e8e8e8;">${rows}</table>
+  </td></tr>
+  <tr><td style="background:#fffbf0;padding:20px 28px;border:1px solid #ffe08a;">
+    <div style="font-size:10px;letter-spacing:2px;color:#b8860b;text-transform:uppercase;margin-bottom:10px;">📋 Actie</div>
+    <div style="font-size:13px;color:#333;line-height:1.8;">
+      De cliënt kreeg géén oefenplan maar het advies om eerst een gratis check-gesprek te plannen (Calendly-link in de mail).<br>
+      • Bel of app <strong>vandaag</strong> om het gesprek in te plannen<br>
+      • Beoordeel of doorverwijzing naar huisarts/fysio nodig is vóór er getraind wordt
+    </div>
+  </td></tr>
+  <tr><td style="padding:16px 0;">
+    <div style="font-size:9px;letter-spacing:2px;color:#aaa;text-transform:uppercase;text-align:center;font-family:monospace;">9toFit Coach Dashboard</div>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+  // Coach-brief EERST — dit is de mail die er echt toe doet bij alarmsignalen.
+  // Faalt de klantmail daarna (bijv. bounce), dan is de coach tóch op de hoogte.
+  console.log('Sending red-flag coach brief to:', coachEmail);
+  const coachRes = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RESEND_API_KEY}` },
+    body: JSON.stringify({
+      from: `9toFit Scanner <${fromEmail}>`,
+      to: [coachEmail],
+      subject: `🚩 Alarmsignalen: ${name} — eerst bellen, geen oefenplan verstuurd`,
+      html: coachHtml
+    })
+  });
+  let coachFailed = false;
+  if (!coachRes.ok) {
+    coachFailed = true;
+    const coachData = await coachRes.json().catch(() => ({}));
+    console.error('Red-flag coach email failed:', JSON.stringify(coachData));
+  }
+
+  console.log('Sending red-flag advice to client:', email);
+  const clientRes = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.RESEND_API_KEY}` },
+    body: JSON.stringify({
+      from: `9toFit Performance <${fromEmail}>`,
+      to: [email],
+      reply_to: coachEmail,
+      subject: isEn
+        ? `${name}, your scan: let's look at this together first`
+        : `${name}, jouw scan: eerst even samen kijken`,
+      html: clientHtml
+    })
+  });
+  const clientData = await clientRes.json();
+  if (!clientRes.ok) throw new Error(`Client email failed: ${clientData.message || JSON.stringify(clientData)}`);
+  // De alarm-brief naar de coach is de mail die er echt toe doet op deze route:
+  // faalt die, dan mag de route géén success melden — de frontend laat de
+  // "gemaild"-bevestiging dan achterwege en de fout is zichtbaar in de logs.
+  if (coachFailed) throw new Error('Red-flag coach email failed');
 }
 
 // ════════════════════════════════════════

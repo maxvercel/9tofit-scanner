@@ -210,11 +210,6 @@ const STYLES = `
     padding: 6px 12px; background: var(--warm); border: 1px solid var(--border); border-radius: 8px;
     font-size: 10px; font-weight: 600; color: var(--muted-light); filter: blur(3px);
   }
-  .gate-progress { margin-bottom: 28px; }
-  .gate-skip { display: block; width: 100%; text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-  .gate-skip:hover { color: var(--text); }
-  .gate-back { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; margin-top: 24px; padding: 0; }
-  .gate-back:hover { color: var(--text); }
   .gate-error { font-size: 12px; font-weight: 600; color: #ef4444; margin-bottom: 16px; padding: 12px 14px; border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); border-radius: var(--radius-sm); }
   .gate-fields { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 18px; }
   @media(max-width:560px){ .gate-fields { grid-template-columns: 1fr; } }
@@ -606,10 +601,9 @@ export default function App() {
     painFunction: [],
   });
 
-  // User info (gate)
+  // User info (gate) — v2: naam, e-mail en telefoon als drie losse vraagstappen
   const [userInfo, setUserInfo] = useState({ name: "", email: "", phone: "" });
-  // Gate in losse micro-stappen: 0 = voornaam, 1 = e-mail, 2 = telefoon (optioneel)
-  const [gateStep, setGateStep] = useState(0);
+  const [gateStep, setGateStep] = useState(0); // 0 = naam, 1 = e-mail, 2 = telefoon
 
   // AI result (pain path only)
   const [result, setResult] = useState(null);
@@ -746,7 +740,16 @@ export default function App() {
   const leadTier = computeLeadTier(data, painData, scanPath).tier;
   const totalSteps = steps.length;
   const currentStepId = steps[step];
-  const progress = totalSteps > 0 ? ((step + 1) / (totalSteps + 1)) * 100 : 0; // +1 for gate
+  // De 3 contactstappen (naam, e-mail, telefoon) tellen mee als echte stappen,
+  // zodat de voortgangsbalk doorloopt tot 100% en het staplabel klopt.
+  const GATE_STEPS = 3;
+  const totalWithGate = totalSteps + GATE_STEPS;
+  const progress =
+    totalSteps > 0
+      ? phase === "gate"
+        ? ((totalSteps + gateStep + 1) / totalWithGate) * 100
+        : ((step + 1) / totalWithGate) * 100
+      : 0;
 
   // ── Navigation ──
   const canProceed = () => {
@@ -803,8 +806,75 @@ export default function App() {
   const toggleMulti = (arr, val) =>
     arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val];
 
+  // Multi-select met een exclusieve "geen van deze"-optie: 'none' aanvinken
+  // wist de rest, en een echte optie aanvinken wist 'none'. Voorkomt de
+  // tegenstrijdige combinatie "Nee, niets hiervan" + een alarmsignaal.
+  const toggleWithNone = (arr, val) => {
+    if (val === "none") return arr.includes("none") ? [] : ["none"];
+    const next = toggleMulti(arr.filter((x) => x !== "none"), val);
+    return next;
+  };
+
+  // Echte alarmsignalen aangevinkt? (alles behalve 'none')
+  const hasRedFlags = painData.painRedFlags.some((f) => f !== "none");
+
+  // ── Submit bij alarmsignalen: géén oefenplan, eerst een gratis check-call ──
+  // Bij uitstraling, krachtverlies of nachtpijn is online oefeningen voorschrijven
+  // niet verantwoord. De lead gaat wél het platform in, de coach krijgt een
+  // alarm-brief, en de bezoeker krijgt een rustig "plan eerst een gesprek"-scherm.
+  const runRedFlagSubmit = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await submitToPlatform(null);
+      fetch("/api/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: userInfo.name,
+          email: userInfo.email,
+          phone: userInfo.phone,
+          lang: locale,
+          result: null,
+          type: "pain_red_flag",
+          scanPath: "pain",
+          answers: {
+            pain_location: painData.painLocations,
+            pain_timing: painData.painTiming,
+            movement_triggers: painData.painTriggers,
+            pain_duration: painData.painDuration,
+            pain_intensity: painData.painIntensity,
+            pain_onset: painData.painOnset,
+            pain_easers: painData.painEasers,
+            pain_red_flags: painData.painRedFlags,
+            functional_limitations: painData.painFunction,
+            work_type: data.workSituation,
+            training_history: data.trainingBackground,
+            activity_level: data.trainingDaysAvailable,
+          },
+          extraData: {
+            age_range: data.ageRange,
+            work_hours_per_week: data.workHoursPerWeek,
+            start_urgency: data.startUrgency,
+          },
+        }),
+      })
+        .then((r) => { if (r.ok) setEmailSent(true); })
+        .catch(() => {});
+      setSubmitting(false);
+      setPhase("safety");
+    } catch (e) {
+      setError(e.message);
+      setSubmitting(false);
+      setGateStep(2);
+      setPhase("gate");
+    }
+  };
+
   // ── Submit for pain path (AI analysis) ──
   const runPainAnalysis = async () => {
+    // Alarmsignalen → geen AI-oefenplan maar de veilige route (call eerst).
+    if (hasRedFlags) return runRedFlagSubmit();
     setPhase("analyzing");
     setError(null);
     setAnalyzeStep(0);
@@ -886,13 +956,14 @@ export default function App() {
           },
         }),
       })
-        .then(() => setEmailSent(true))
+        .then((r) => { if (r.ok) setEmailSent(true); })
         .catch(() => {});
 
       // Submit to 9toFit platform (account + magic link)
       await submitToPlatform(aiData.result);
     } catch (e) {
       setError(e.message);
+      setGateStep(2);
       setPhase("gate");
     }
   };
@@ -1023,7 +1094,7 @@ export default function App() {
     setScanPath("");
     // Bewaar UTM zodat een 2e scan in dezelfde sessie z'n kanaal-attributie houdt.
     setData((prev) => ({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", intent: "", referralSource: "", utm: prev.utm }));
-    setPainData({ painLocations: [], painIntensity: 5, painDuration: "", painTiming: "", painTriggers: [] });
+    setPainData({ painLocations: [], painIntensity: 5, painDuration: "", painTiming: "", painTriggers: [], painOnset: "", painEasers: [], painRedFlags: [], painFunction: [] });
     setUserInfo({ name: "", email: "", phone: "" });
     setGateStep(0);
     setResult(null);
@@ -1356,7 +1427,7 @@ export default function App() {
               <div className="progress-wrap">
                 <div className="progress-top">
                   <span className="progress-label">
-                    {t('Stap')} {step + 1} {t('van')} {totalSteps}
+                    {t('Stap')} {step + 1} {t('van')} {totalWithGate}
                   </span>
                   <span className="progress-label">
                     {scanPath === "pain"
@@ -1939,7 +2010,7 @@ export default function App() {
                           onClick={() =>
                             setPainData((d) => ({
                               ...d,
-                              painRedFlags: toggleMulti(d.painRedFlags, rf.id),
+                              painRedFlags: toggleWithNone(d.painRedFlags, rf.id),
                             }))
                           }
                         >
@@ -1965,7 +2036,7 @@ export default function App() {
                           onClick={() =>
                             setPainData((d) => ({
                               ...d,
-                              painFunction: toggleMulti(d.painFunction, fn.id),
+                              painFunction: toggleWithNone(d.painFunction, fn.id),
                             }))
                           }
                         >
@@ -1999,88 +2070,118 @@ export default function App() {
           {/* ═══════ GATE (email capture) ═══════ */}
           {phase === "gate" && (
             <div className="gate">
-              {/* Progressiebalk loopt door op de gate — "bijna klaar"-effect */}
-              <div className="progress-wrap gate-progress">
-                <div className="progress-top">
-                  <span
-                    className="progress-label"
-                    style={{ color: "var(--accent)", fontWeight: 700 }}
-                  >
-                    {gateStep === 0 ? t('Bijna klaar') : t('Laatste stap')}
-                  </span>
-                  <span className="progress-label">
-                    {scanPath === "pain"
-                      ? t("Pijn & Prestatie Scan")
-                      : scanPath === "fysio"
-                      ? t("Fysio Intake")
-                      : t("Performance Scan")}
-                  </span>
-                </div>
-                <div className="progress-bar">
-                  <div
-                    className="progress-fill"
-                    style={{
-                      width: `${((totalSteps + (gateStep + 1) / 3) / (totalSteps + 1)) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="gate-box" key={gateStep}>
-                {/* ── GATE-STAP 1: VOORNAAM ── */}
-                {gateStep === 0 && (
-                  <>
-                    <div className="gate-eyebrow">
-                      {t('Scan voltooid')} —{" "}
+              <div className="gate-box">
+                <div className="progress-wrap" style={{ marginBottom: "18px" }}>
+                  <div className="progress-top">
+                    <span className="progress-label">
+                      {t('Stap')} {totalSteps + gateStep + 1} {t('van')} {totalWithGate}
+                    </span>
+                    <span className="progress-label">
                       {scanPath === "pain"
-                        ? t("Pijn & Prestatie Analyse")
+                        ? t("Pijn & Prestatie Scan")
                         : scanPath === "fysio"
                         ? t("Fysio Intake")
-                        : t("Performance Profiel")}
-                    </div>
-                    <div className="gate-title">
-                      {scanPath === "pain"
-                        ? t('Je rapport is klaar.')
-                        : scanPath === "fysio"
-                        ? t('Je herstelprofiel is klaar.')
-                        : t('Je Performance Profiel is klaar.')}
-                      <br />
-                      {t('Voor wie mogen we het klaarzetten?')}
-                    </div>
-
-                    {scanPath === "pain" ? (
-                      <div className="gate-preview">
-                        <div className="preview-pill">
-                          {t('Bewegingsbeperkingen: geïdentificeerd')}
-                        </div>
-                        <div className="preview-pill">
-                          {t('Risico Niveau: geanalyseerd')}
-                        </div>
-                        <div className="preview-pill">
-                          {t('7-Daags Plan: gegenereerd')}
-                        </div>
-                        <div className="preview-pill">
-                          {t('Expert Beoordeling: gereed')}
-                        </div>
-                      </div>
+                        : t("Performance Scan")}
+                    </span>
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{ width: `${progress}%` }} />
+                  </div>
+                </div>
+                <div className="gate-eyebrow">
+                  {t('Scan voltooid')} —{" "}
+                  {scanPath === "pain"
+                    ? t("Pijn & Prestatie Analyse")
+                    : scanPath === "fysio"
+                    ? t("Fysio Intake")
+                    : t("Performance Profiel")}
+                </div>
+                <div className="gate-title">
+                  {gateStep === 0 ? (
+                    scanPath === "pain" ? (
+                      <>
+                        {t('Je rapport is klaar.')}
+                        <br />
+                        {t('Hoe mogen we je noemen?')}
+                      </>
+                    ) : scanPath === "fysio" ? (
+                      <>
+                        {t('Je herstelprofiel is klaar.')}
+                        <br />
+                        {t('Hoe mogen we je noemen?')}
+                      </>
                     ) : (
-                      <div className="gate-preview">
-                        <div className="preview-pill">
-                          {t('Bewegingsprofiel: geanalyseerd')}
-                        </div>
-                        <div className="preview-pill">
-                          {t('Sterke punten + groeikans: in kaart')}
-                        </div>
-                        <div className="preview-pill">
-                          {t(scanPath === "fysio" ? 'Opbouwplan: gegenereerd' : 'Krachtplan: gegenereerd')}
-                        </div>
-                        <div className="preview-pill">
-                          {t('2 weken app: klaar')}
-                        </div>
-                      </div>
-                    )}
+                      <>
+                        {t('Je Performance Profiel is klaar.')}
+                        <br />
+                        {t('Hoe mogen we je noemen?')}
+                      </>
+                    )
+                  ) : gateStep === 1 ? (
+                    <>{scanPath === "pain" ? t('Waar mag je rapport naartoe?') : t('Waar mag je profiel naartoe?')}</>
+                  ) : (
+                    <>{t('Laatste stap: sneller contact?')}</>
+                  )}
+                </div>
+                {gateStep === 0 && (
+                  <div className="gate-sub">
+                    {scanPath === "pain"
+                      ? t('Nog drie korte vragen, dan ontvang je direct je persoonlijke bewegingsanalyse.')
+                      : scanPath === "fysio"
+                      ? t('Nog drie korte vragen, dan zie je direct je herstelprofiel én je opbouwplan.')
+                      : t('Nog drie korte vragen, dan zie je direct je bewegingsprofiel én je persoonlijke krachtplan.')}
+                  </div>
+                )}
 
-                    <div className="field-wrap">
+                {error && (
+                  <div className="gate-error">
+                    ⚠ {error} — {t('probeer het opnieuw')}
+                  </div>
+                )}
+
+                {gateStep === 0 && (scanPath === "pain" ? (
+                  <div className="gate-preview">
+                    <div className="preview-pill">
+                      {t('Bewegingsbeperkingen: geïdentificeerd')}
+                    </div>
+                    <div className="preview-pill">
+                      {t('Risico Niveau: geanalyseerd')}
+                    </div>
+                    <div className="preview-pill">
+                      {t('7-Daags Plan: gegenereerd')}
+                    </div>
+                    <div className="preview-pill">
+                      {t('Expert Beoordeling: gereed')}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="gate-preview">
+                    <div className="preview-pill">
+                      {t('Bewegingsprofiel: geanalyseerd')}
+                    </div>
+                    <div className="preview-pill">
+                      {t('Sterke punten + groeikans: in kaart')}
+                    </div>
+                    <div className="preview-pill">
+                      {t(scanPath === "fysio" ? 'Opbouwplan: gegenereerd' : 'Krachtplan: gegenereerd')}
+                    </div>
+                    <div className="preview-pill">
+                      {t('2 weken app: klaar')}
+                    </div>
+                  </div>
+                ))}
+
+                {/* ── Contactstap 1/3: voornaam ── */}
+                {gateStep === 0 && (
+                  <form
+                    key="gate-name"
+                    style={{ animation: "fadeUp 0.35s ease both" }}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (userInfo.name.trim()) setGateStep(1);
+                    }}
+                  >
+                    <div className="field-wrap" style={{ marginTop: "12px" }}>
                       <label className="field-label">{t('Voornaam')}</label>
                       <input
                         className="field-input"
@@ -2091,46 +2192,41 @@ export default function App() {
                         onChange={(e) =>
                           setUserInfo((p) => ({ ...p, name: e.target.value }))
                         }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && userInfo.name.trim()) setGateStep(1);
-                        }}
                       />
+                      <div style={{ fontSize: "10px", color: "#71717a", marginTop: "6px", letterSpacing: "0.5px" }}>
+                        {t('Zo spreken we je aan in je rapport.')}
+                      </div>
                     </div>
-
-                    <button
-                      className="submit-btn"
-                      onClick={() => setGateStep(1)}
-                      disabled={!userInfo.name.trim()}
-                    >
-                      {t('Volgende →')}
-                    </button>
-                  </>
+                    <div className="nav-row">
+                      <button
+                        type="button"
+                        className="back-btn"
+                        onClick={() => setPhase("assessment")}
+                      >
+                        {t('← Terug')}
+                      </button>
+                      <button
+                        type="submit"
+                        className="next-btn"
+                        disabled={!userInfo.name.trim()}
+                      >
+                        {t('Volgende →')}
+                      </button>
+                    </div>
+                  </form>
                 )}
 
-                {/* ── GATE-STAP 2: E-MAIL ── */}
+                {/* ── Contactstap 2/3: e-mailadres ── */}
                 {gateStep === 1 && (
-                  <>
-                    <div className="gate-eyebrow">{t('Laatste stap')}</div>
-                    <div className="gate-title">
-                      {userInfo.name.trim() && (
-                        <>
-                          {t('Top')}, {userInfo.name.trim().split(/\s+/)[0]}.
-                          <br />
-                        </>
-                      )}
-                      {scanPath === "pain"
-                        ? t('Waar mogen we je rapport naartoe sturen?')
-                        : t('Waar mogen we je profiel + plan naartoe sturen?')}
-                    </div>
-                    <div className="gate-sub">
-                      {scanPath === "pain"
-                        ? t('Je persoonlijke bewegingsanalyse en 7-daags correctief plan, direct via e-mail.')
-                        : scanPath === "fysio"
-                        ? t('Vul je gegevens in en zie direct je herstelprofiel én je opbouwplan. Je coach plant daarna je intake in.')
-                        : t('Vul je gegevens in en zie direct je bewegingsprofiel én je persoonlijke krachtplan — meteen te starten in de app.')}
-                    </div>
-
-                    <div className="field-wrap">
+                  <form
+                    key="gate-email"
+                    style={{ animation: "fadeUp 0.35s ease both" }}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (isValidEmail(userInfo.email)) setGateStep(2);
+                    }}
+                  >
+                    <div className="field-wrap" style={{ marginTop: "12px" }}>
                       <label className="field-label">{t('E-mailadres')}</label>
                       <input
                         className="field-input"
@@ -2141,62 +2237,58 @@ export default function App() {
                         onChange={(e) =>
                           setUserInfo((p) => ({ ...p, email: e.target.value }))
                         }
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && isValidEmail(userInfo.email)) setGateStep(2);
-                        }}
                       />
                       {userInfo.email &&
-                        userInfo.email.includes("@") &&
-                        !isValidEmail(userInfo.email) && (
-                          <div
-                            style={{
-                              fontSize: "10px",
-                              color: "#ff6b6b",
-                              marginTop: "6px",
-                              letterSpacing: "0.5px",
-                            }}
-                          >
-                            {t('Check je emailadres — dit lijkt niet geldig')}
-                          </div>
-                        )}
+                      userInfo.email.includes("@") &&
+                      !isValidEmail(userInfo.email) ? (
+                        <div style={{ fontSize: "10px", color: "#ff6b6b", marginTop: "6px", letterSpacing: "0.5px" }}>
+                          {t('Check je emailadres — dit lijkt niet geldig')}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: "10px", color: "#71717a", marginTop: "6px", letterSpacing: "0.5px" }}>
+                          {scanPath === "pain"
+                            ? t('Hier ontvang je je rapport én je inloglink voor de 9toFit-app.')
+                            : t('Hier ontvang je je profiel én je inloglink voor de 9toFit-app.')}
+                        </div>
+                      )}
                     </div>
-
-                    <button
-                      className="submit-btn"
-                      onClick={() => setGateStep(2)}
-                      disabled={!isValidEmail(userInfo.email)}
-                    >
-                      {t('Volgende →')}
-                    </button>
-                    <div className="submit-note">
-                      {scanPath === "pain"
-                        ? t('Je resultaten worden direct gemaild · Geen spam, ooit')
-                        : t('Je profiel + plan staan meteen klaar · Geen spam, ooit')}
+                    <div className="nav-row">
+                      <button
+                        type="button"
+                        className="back-btn"
+                        onClick={() => setGateStep(0)}
+                      >
+                        {t('← Terug')}
+                      </button>
+                      <button
+                        type="submit"
+                        className="next-btn"
+                        disabled={!isValidEmail(userInfo.email)}
+                      >
+                        {t('Volgende →')}
+                      </button>
                     </div>
-                    <button className="gate-back" onClick={() => setGateStep(0)}>
-                      {t('← Terug')}
-                    </button>
-                  </>
+                  </form>
                 )}
 
-                {/* ── GATE-STAP 3: TELEFOON (OPTIONEEL) ── */}
+                {/* ── Contactstap 3/3: telefoon (optioneel) + versturen ── */}
                 {gateStep === 2 && (
-                  <>
-                    <div className="gate-eyebrow">{t('Laatste stap — optioneel')}</div>
-                    <div className="gate-title">
-                      {t('Wil je dat je coach even met je meekijkt?')}
-                    </div>
-                    <div className="gate-sub">
-                      {t('Laat je (WhatsApp-)nummer achter zodat je coach je snel kan bereiken. Liever niet? Sla deze stap gewoon over.')}
-                    </div>
-
-                    {error && (
-                      <div className="gate-error">
-                        ⚠ {error} — {t('probeer het opnieuw')}
-                      </div>
-                    )}
-
-                    <div className="field-wrap">
+                  <form
+                    key="gate-phone"
+                    style={{ animation: "fadeUp 0.35s ease both" }}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (
+                        userInfo.name.trim() &&
+                        isValidEmail(userInfo.email) &&
+                        (!userInfo.phone || isValidPhone(userInfo.phone)) &&
+                        !submitting
+                      ) {
+                        handleGateSubmit();
+                      }
+                    }}
+                  >
+                    <div className="field-wrap" style={{ marginTop: "12px" }}>
                       <label className="field-label">{t('Telefoonnummer (optioneel)')}</label>
                       <input
                         className="field-input"
@@ -2207,25 +2299,9 @@ export default function App() {
                         onChange={(e) =>
                           setUserInfo((p) => ({ ...p, phone: e.target.value }))
                         }
-                        onKeyDown={(e) => {
-                          if (
-                            e.key === "Enter" &&
-                            !submitting &&
-                            userInfo.name &&
-                            isValidEmail(userInfo.email)
-                          )
-                            handleGateSubmit();
-                        }}
                       />
                       {userInfo.phone && !isValidPhone(userInfo.phone) && (
-                        <div
-                          style={{
-                            fontSize: "10px",
-                            color: "#ff6b6b",
-                            marginTop: "6px",
-                            letterSpacing: "0.5px",
-                          }}
-                        >
+                        <div style={{ fontSize: "10px", color: "#ff6b6b", marginTop: "6px", letterSpacing: "0.5px" }}>
                           {t('Check je telefoonnummer')}
                         </div>
                       )}
@@ -2252,12 +2328,12 @@ export default function App() {
                     )}
 
                     <button
+                      type="submit"
                       className="submit-btn"
-                      onClick={handleGateSubmit}
                       disabled={
-                        !userInfo.name ||
-                        !userInfo.email ||
+                        !userInfo.name.trim() ||
                         !isValidEmail(userInfo.email) ||
+                        (!!userInfo.phone && !isValidPhone(userInfo.phone)) ||
                         submitting
                       }
                     >
@@ -2267,24 +2343,105 @@ export default function App() {
                         ? t('Analyseer Mijn Beweging →')
                         : t('Toon Mijn Profiel →')}
                     </button>
-                    {!submitting && !userInfo.phone && (
-                      <button className="gate-skip" onClick={handleGateSubmit}>
-                        {scanPath === "pain"
-                          ? t('Overslaan en mijn rapport bekijken →')
-                          : t('Overslaan en mijn profiel bekijken →')}
-                      </button>
-                    )}
                     <div className="submit-note">
                       {scanPath === "pain"
-                        ? t('Je resultaten worden direct gemaild · Geen spam, ooit')
-                        : t('Je profiel + plan staan meteen klaar · Geen spam, ooit')}
+                        ? t('Je resultaten worden direct gemaild')
+                        : t('Je profiel + plan staan meteen klaar')}
                     </div>
-                    <button className="gate-back" onClick={() => setGateStep(1)}>
-                      {t('← Terug')}
-                    </button>
-                  </>
+                    <div className="nav-row" style={{ marginTop: "10px" }}>
+                      <button
+                        type="button"
+                        className="back-btn"
+                        onClick={() => setGateStep(1)}
+                      >
+                        {t('← Terug')}
+                      </button>
+                    </div>
+                  </form>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* ═══════ SAFETY (pijnpad met alarmsignalen — eerst een check-call) ═══════ */}
+          {phase === "safety" && (
+            <div className="result">
+              <div className="result-hero">
+                <div className="result-eyebrow">
+                  {t('Scan voltooid')} · {t('Persoonlijk advies')}
+                </div>
+                <div className="result-name">
+                  {t('Eerst even goed kijken,')} <em>{userInfo.name}</em>.
+                </div>
+              </div>
+
+              <div className="r-section">
+                <div className="r-sec-head">
+                  <span className="r-sec-num">01</span>
+                  <span className="r-sec-title">{t('Waarom je nu geen standaard oefenplan krijgt')}</span>
+                </div>
+                <div className="r-sec-body">
+                  <p>
+                    {t('Je gaf een of meer signalen aan die we serieus nemen:')}
+                  </p>
+                  <div className="lim-list" style={{ margin: "12px 0" }}>
+                    {PAIN_RED_FLAGS.filter(
+                      (rf) => rf.id !== "none" && painData.painRedFlags.includes(rf.id)
+                    ).map((rf) => (
+                      <div key={rf.id} className="lim-item">
+                        <span className="lim-icon">{rf.icon}</span>
+                        <div>
+                          <div className="lim-label">{t(rf.label)}</div>
+                          <div className="lim-desc">{t(rf.sub)}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <p>
+                    {t('Geen reden voor paniek — dit soort signalen komt vaak voor en is meestal goed te verhelpen. Maar er online zomaar oefeningen op loslaten zou niet professioneel zijn. Daarom krijg je van ons iets beters dan een standaard plan: Max kijkt eerst persoonlijk met je mee, gratis en vrijblijvend. Daarna weet je zeker dat wat je doet ook veilig is.')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="call-block">
+                <div>
+                  <div className="call-eyebrow">{t('Aanbevolen volgende stap')}</div>
+                  <div className="call-title">{t('Plan je gratis check-gesprek')}</div>
+                  <div className="call-desc">
+                    {t('In een kort gesprek (telefonisch of in de studio) loopt Max je signalen met je door en hoor je direct wat wél veilig kan. Vaak kun je daarna gewoon aan de slag.')}
+                  </div>
+                </div>
+                <a
+                  href={CALENDLY_URL}
+                  onClick={(e) => { e.preventDefault(); openCalendly(); }}
+                  className="call-btn"
+                >
+                  {t('Plan Gratis Check-Gesprek →')}
+                </a>
+              </div>
+
+              <div className="r-section" style={{ marginTop: "2px" }}>
+                <div className="r-sec-body">
+                  <p style={{ fontSize: "12px", color: "#a1a1aa" }}>
+                    {t('Liever appen?')}{" "}
+                    <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" style={{ color: "#f97316" }}>
+                      {t('Stuur Max een WhatsApp-bericht')}
+                    </a>
+                    {" · "}
+                    {t('Bij plotselinge hevige klachten, koorts of verlies van controle over blaas of darmen: neem vandaag nog contact op met je huisarts.')}
+                  </p>
+                </div>
+              </div>
+
+              <div className={`email-bar ${emailSent ? "sent" : ""}`}>
+                <span className="email-dot" />
+                {emailSent
+                  ? `${t('Dit advies is ook gemaild naar')} ${userInfo.email}`
+                  : t('Je aanmelding is binnen — Max weet ervan en neemt contact met je op.')}
+              </div>
+              <button className="restart-btn" onClick={reset}>
+                {t('← Nieuwe Scan Starten')}
+              </button>
             </div>
           )}
 

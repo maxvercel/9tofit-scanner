@@ -485,24 +485,6 @@ const dict = {
 
   // ────────── GATE (extended) ──────────
   'Scan voltooid': { en: 'Scan complete' },
-
-  // ────── GATE IN LOSSE STAPPEN ──────
-  'Bijna klaar': { en: 'Almost done' },
-  'Laatste stap': { en: 'Final step' },
-  'Laatste stap — optioneel': { en: 'Final step — optional' },
-  'Voor wie mogen we het klaarzetten?': { en: 'Who should we prepare it for?' },
-  'Top': { en: 'Great' },
-  'Waar mogen we je rapport naartoe sturen?': { en: 'Where should we send your report?' },
-  'Waar mogen we je profiel + plan naartoe sturen?': { en: 'Where should we send your profile + plan?' },
-  'Je persoonlijke bewegingsanalyse en 7-daags correctief plan, direct via e-mail.': {
-    en: 'Your personal movement analysis and 7-day corrective plan, straight to your inbox.',
-  },
-  'Wil je dat je coach even met je meekijkt?': { en: 'Want your coach to take a quick look with you?' },
-  'Laat je (WhatsApp-)nummer achter zodat je coach je snel kan bereiken. Liever niet? Sla deze stap gewoon over.': {
-    en: 'Leave your (WhatsApp) number so your coach can reach you quickly. Rather not? Just skip this step.',
-  },
-  'Overslaan en mijn rapport bekijken →': { en: 'Skip and view my report →' },
-  'Overslaan en mijn profiel bekijken →': { en: 'Skip and view my profile →' },
   'Pijn & Prestatie Analyse': { en: 'Pain & Performance Analysis' },
   'Performance Profiel': { en: 'Performance Profile' },
   'Je rapport is klaar.': { en: 'Your report is ready.' },
@@ -601,6 +583,55 @@ const dict = {
     en: 'You will receive your custom program within 24 hours.',
   },
   'Plan een Kennismakingsgesprek →': { en: 'Schedule an Intro Call →' },
+
+  // ────────── V2: LOSSE CONTACTSTAPPEN (naam → e-mail → telefoon) ──────────
+  'Hoe mogen we je noemen?': { en: 'What should we call you?' },
+  'Waar mag je rapport naartoe?': { en: 'Where should we send your report?' },
+  'Waar mag je profiel naartoe?': { en: 'Where should we send your profile?' },
+  'Laatste stap: sneller contact?': { en: 'Last step: faster contact?' },
+  'Nog drie korte vragen, dan ontvang je direct je persoonlijke bewegingsanalyse.': {
+    en: 'Three short questions to go, then you instantly receive your personal movement analysis.',
+  },
+  'Nog drie korte vragen, dan zie je direct je herstelprofiel én je opbouwplan.': {
+    en: 'Three short questions to go, then you instantly see your recovery profile and rebuild plan.',
+  },
+  'Nog drie korte vragen, dan zie je direct je bewegingsprofiel én je persoonlijke krachtplan.': {
+    en: 'Three short questions to go, then you instantly see your movement profile and personal strength plan.',
+  },
+  'Zo spreken we je aan in je rapport.': { en: 'This is how we address you in your report.' },
+  'Hier ontvang je je rapport én je inloglink voor de 9toFit-app.': {
+    en: 'This is where you receive your report and your login link for the 9toFit app.',
+  },
+  'Hier ontvang je je profiel én je inloglink voor de 9toFit-app.': {
+    en: 'This is where you receive your profile and your login link for the 9toFit app.',
+  },
+  'Je resultaten worden direct gemaild': { en: 'Your results are emailed right away' },
+  'Je profiel + plan staan meteen klaar': { en: 'Your profile + plan are ready right away' },
+
+  // ────────── V2: ALARMSIGNALEN → EERST EEN GRATIS CHECK-GESPREK ──────────
+  'Persoonlijk advies': { en: 'Personal advice' },
+  'Eerst even goed kijken,': { en: 'Let’s take a proper look first,' },
+  'Waarom je nu geen standaard oefenplan krijgt': { en: 'Why you’re not getting a standard exercise plan right now' },
+  'Je gaf een of meer signalen aan die we serieus nemen:': {
+    en: 'You indicated one or more signals we take seriously:',
+  },
+  'Geen reden voor paniek — dit soort signalen komt vaak voor en is meestal goed te verhelpen. Maar er online zomaar oefeningen op loslaten zou niet professioneel zijn. Daarom krijg je van ons iets beters dan een standaard plan: Max kijkt eerst persoonlijk met je mee, gratis en vrijblijvend. Daarna weet je zeker dat wat je doet ook veilig is.': {
+    en: 'No reason to panic — these signals are common and usually very treatable. But throwing online exercises at them without a proper check wouldn’t be professional. So instead of a standard plan you get something better: Max first takes a personal look with you, free and without obligation. After that you know for sure that what you do is safe.',
+  },
+  'Plan je gratis check-gesprek': { en: 'Book your free check-up call' },
+  'In een kort gesprek (telefonisch of in de studio) loopt Max je signalen met je door en hoor je direct wat wél veilig kan. Vaak kun je daarna gewoon aan de slag.': {
+    en: 'In a short call (by phone or at the studio) Max goes through your signals with you and tells you right away what is safe to do. Often you can simply get started afterwards.',
+  },
+  'Plan Gratis Check-Gesprek →': { en: 'Book Free Check-Up Call →' },
+  'Liever appen?': { en: 'Prefer WhatsApp?' },
+  'Stuur Max een WhatsApp-bericht': { en: 'Send Max a WhatsApp message' },
+  'Bij plotselinge hevige klachten, koorts of verlies van controle over blaas of darmen: neem vandaag nog contact op met je huisarts.': {
+    en: 'With sudden severe symptoms, fever, or loss of bladder or bowel control: contact your GP today.',
+  },
+  'Dit advies is ook gemaild naar': { en: 'This advice was also emailed to' },
+  'Je aanmelding is binnen — Max weet ervan en neemt contact met je op.': {
+    en: 'Your submission is in — Max knows about it and will get in touch.',
+  },
 };
 
 /**
