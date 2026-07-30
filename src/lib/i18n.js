@@ -628,6 +628,23 @@ const dict = {
   'Bij plotselinge hevige klachten, koorts of verlies van controle over blaas of darmen: neem vandaag nog contact op met je huisarts.': {
     en: 'With sudden severe symptoms, fever, or loss of bladder or bowel control: contact your GP today.',
   },
+  // ────────── V3: ÉÉN VRAAG PER SCHERM ──────────
+  'Leeftijd bepaalt hoe we belasting en herstel voor je inschatten.': { en: 'Your age tells us how to gauge load and recovery for you.' },
+  'Wat is je trainingservaring?': { en: 'What is your training experience?' },
+  'Zo stemmen we het startniveau precies op jou af.': { en: 'This lets us match the starting level exactly to you.' },
+  'Hoe ziet je werkdag eruit?': { en: 'What does your workday look like?' },
+  'Je werkhouding heeft directe invloed op je lichaam en je schema.': { en: 'Your work posture directly affects your body and your program.' },
+  'Hoeveel uur werk je per week?': { en: 'How many hours do you work per week?' },
+  'Zo schatten we je belasting en beschikbare energie in.': { en: 'This helps us gauge your load and available energy.' },
+  'Zo houden we in je schema rekening met je agenda en je herstel.': { en: 'This lets your program account for your schedule and recovery.' },
+  'Wees realistisch — consistentie wint van volume.': { en: 'Be realistic — consistency beats volume.' },
+  'Geen verplichting — dit helpt je coach de juiste prioriteit te geven.': { en: 'No obligation — this helps your coach prioritise.' },
+  'Kies het moment dat het meest opvalt.': { en: 'Pick the moment that stands out most.' },
+  "Hoe erg is de pijn op z'n slechtste moment?": { en: 'How bad is the pain at its worst?' },
+  'De duur zegt veel over de fase waarin je klacht zit.': { en: 'Duration says a lot about the phase your complaint is in.' },
+  'Selecteer alles wat helpt — ook een beetje telt.': { en: 'Select everything that helps — even a little counts.' },
+  'Een snelle functietest — kies wat niet soepel gaat.': { en: 'A quick function test — pick what does not move smoothly.' },
+
   'Dit advies is ook gemaild naar': { en: 'This advice was also emailed to' },
   'Je aanmelding is binnen — Max weet ervan en neemt contact met je op.': {
     en: 'Your submission is in — Max knows about it and will get in touch.',

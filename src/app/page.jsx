@@ -713,26 +713,41 @@ export default function App() {
   const getSteps = () => {
     // Pijn-pad opent met de makkelijkste, meest herkenbare vraag ("waar zit het?")
     // zodat een koude lead direct momentum pakt vóór de zwaardere profielvragen.
+    // V3: één vraag per scherm — korte, glasheldere stappen (Typeform-stijl).
     if (scanPath === "pain") {
       // Klinische stappen eerst — dit voelt als een écht bewegingsonderzoek,
-      // pas daarna de profiel-/kwalificatievragen.
+      // pas daarna de profiel-/kwalificatievragen. De kinderen-vraag stellen
+      // we op het pijnpad bewust niet (voelt als datagraaien in een pijnscan).
       return [
-        "pain_location",   // waar + wanneer
-        "pain_details",    // intensiteit + duur
-        "pain_onset",      // ontstaan + wat verlicht (klinisch)
-        "pain_triggers",   // verergerende bewegingen (altijd tonen)
-        "pain_context",    // rode vlaggen + functionele test (klinisch)
-        "about_you",       // leeftijd + achtergrond
-        "intent",          // koopintentie (kwalificatie, aan het eind)
-        "situation",       // werk + dagen + urgentie
+        "pain_location",
+        "pain_timing",
+        "pain_intensity",
+        "pain_duration",
+        "pain_onset",
+        "pain_easers",
+        "pain_triggers",
+        "pain_red_flags",
+        "pain_function",
+        "age",
+        "training_background",
+        "intent",
+        "work_situation",
+        "work_hours",
+        "training_days",
+        "start_urgency",
       ];
     }
     // Fitness/fysio: profiel-vragen (geen pijn-stappen; fysio-context in de gate).
     return [
-      "about_you",       // age + training background
-      "goals",           // goals + year goal text
-      "intent",          // koopintentie (v2 kwalificatie)
-      "situation",       // work situation + hours + training days + urgency
+      "age",
+      "training_background",
+      "goals",
+      "intent",
+      "work_situation",
+      "work_hours",
+      "children",
+      "training_days",
+      "start_urgency",
     ];
   };
 
@@ -758,24 +773,42 @@ export default function App() {
   // ── Navigation ──
   const canProceed = () => {
     switch (currentStepId) {
-      case "about_you":
-        return data.ageRange && data.trainingBackground;
+      case "age":
+        return !!data.ageRange;
+      case "training_background":
+        return !!data.trainingBackground;
       case "goals":
         return data.goals.length > 0;
       case "intent":
         return !!data.intent;
-      case "situation":
-        return data.workSituation && data.startUrgency;
+      case "work_situation":
+        return !!data.workSituation;
+      case "work_hours":
+        return !!data.workHoursPerWeek;
+      case "children":
+        return data.hasChildren !== null;
+      case "training_days":
+        return !!data.trainingDaysAvailable;
+      case "start_urgency":
+        return !!data.startUrgency;
       case "pain_location":
-        return painData.painLocations.length > 0 && painData.painTiming;
-      case "pain_details":
-        return painData.painIntensity > 0 && painData.painDuration;
+        return painData.painLocations.length > 0;
+      case "pain_timing":
+        return !!painData.painTiming;
+      case "pain_intensity":
+        return painData.painIntensity > 0;
+      case "pain_duration":
+        return !!painData.painDuration;
+      case "pain_onset":
+        return !!painData.painOnset;
+      case "pain_easers":
+        return painData.painEasers.length > 0;
       case "pain_triggers":
         return painData.painTriggers.length > 0;
-      case "pain_onset":
-        return !!painData.painOnset && painData.painEasers.length > 0;
-      case "pain_context":
-        return painData.painRedFlags.length > 0 && painData.painFunction.length > 0;
+      case "pain_red_flags":
+        return painData.painRedFlags.length > 0;
+      case "pain_function":
+        return painData.painFunction.length > 0;
       default:
         return false;
     }
@@ -1450,7 +1483,10 @@ export default function App() {
               </div>
 
               {/* ── STEP: About You ── */}
-              {currentStepId === "about_you" && (
+              {/* ── V3: één vraag per scherm ──────────────────────────────── */}
+
+              {/* PROFIEL: leeftijd */}
+              {currentStepId === "age" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
                   {scanPath === "fysio" && data.referralSource && (
                     <div className="fysio-notice">
@@ -1458,12 +1494,10 @@ export default function App() {
                     </div>
                   )}
                   <div className="step-label">{t('Over jou')}</div>
-                  <div className="step-title">{t('Vertel ons over jezelf')}</div>
+                  <div className="step-title">{t('Wat is je leeftijd?')}</div>
                   <div className="step-sub">
-                    {t('Dit helpt ons je profiel en aanpak op maat te maken.')}
+                    {t('Leeftijd bepaalt hoe we belasting en herstel voor je inschatten.')}
                   </div>
-
-                  <div className="section-label">{t('Leeftijd')}</div>
                   <div className="pill-grid">
                     {AGE_RANGES.map((a) => (
                       <button
@@ -1475,8 +1509,21 @@ export default function App() {
                       </button>
                     ))}
                   </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label">{t('Trainingsachtergrond')}</div>
+              {/* PROFIEL: trainingservaring */}
+              {currentStepId === "training_background" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Over jou')}</div>
+                  <div className="step-title">{t('Wat is je trainingservaring?')}</div>
+                  <div className="step-sub">
+                    {t('Zo stemmen we het startniveau precies op jou af.')}
+                  </div>
                   <div className="options-grid">
                     {TRAINING_BACKGROUNDS.map((bg) => (
                       <button
@@ -1492,23 +1539,14 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-
                   <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
-                      {t('Volgende →')}
-                    </button>
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
                   </div>
                 </div>
               )}
 
-              {/* ── STEP: Goals ── */}
+              {/* ── STEP: Goals (fitness/fysio) ── */}
               {currentStepId === "goals" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
                   <div className="step-label">{t('Doelen & Motivatie')}</div>
@@ -1555,16 +1593,8 @@ export default function App() {
                   </div>
 
                   <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
-                      {t('Volgende →')}
-                    </button>
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
                   </div>
                 </div>
               )}
@@ -1595,32 +1625,20 @@ export default function App() {
                   </div>
 
                   <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
-                      {t('Volgende →')}
-                    </button>
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
                   </div>
                 </div>
               )}
 
-              {/* ── STEP: Situation ── */}
-              {currentStepId === "situation" && (
+              {/* SITUATIE: werksituatie */}
+              {currentStepId === "work_situation" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
                   <div className="step-label">{t('Jouw Situatie')}</div>
-                  <div className="step-title">
-                    {t('Hoe ziet jouw dag en week eruit?')}
-                  </div>
+                  <div className="step-title">{t('Hoe ziet je werkdag eruit?')}</div>
                   <div className="step-sub">
-                    {t('Je werksituatie en beschikbaarheid bepalen de opbouw van je schema.')}
+                    {t('Je werkhouding heeft directe invloed op je lichaam en je schema.')}
                   </div>
-
-                  <div className="section-label">{t('Werksituatie')}</div>
                   <div className="options-grid">
                     {WORK_SITUATIONS.map((w) => (
                       <button
@@ -1637,8 +1655,21 @@ export default function App() {
                       </button>
                     ))}
                   </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label">{t('Werkuren per week')}</div>
+              {/* SITUATIE: werkuren */}
+              {currentStepId === "work_hours" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Jouw Situatie')}</div>
+                  <div className="step-title">{t('Hoeveel uur werk je per week?')}</div>
+                  <div className="step-sub">
+                    {t('Zo schatten we je belasting en beschikbare energie in.')}
+                  </div>
                   <div className="pill-grid">
                     {WORK_HOURS.map((h) => (
                       <button
@@ -1652,8 +1683,21 @@ export default function App() {
                       </button>
                     ))}
                   </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label">{t('Heb je kinderen?')}</div>
+              {/* SITUATIE: kinderen (alleen fitness/fysio) */}
+              {currentStepId === "children" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Jouw Situatie')}</div>
+                  <div className="step-title">{t('Heb je kinderen?')}</div>
+                  <div className="step-sub">
+                    {t('Zo houden we in je schema rekening met je agenda en je herstel.')}
+                  </div>
                   <div className="pill-grid">
                     <button
                       className={`pill-btn ${data.hasChildren === false ? "selected" : ""}`}
@@ -1690,9 +1734,22 @@ export default function App() {
                       </div>
                     </>
                   )}
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label">
+              {/* SITUATIE: trainingsdagen */}
+              {currentStepId === "training_days" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Jouw Situatie')}</div>
+                  <div className="step-title">
                     {t('Hoeveel dagen per week kun je trainen?')}
+                  </div>
+                  <div className="step-sub">
+                    {t('Wees realistisch — consistentie wint van volume.')}
                   </div>
                   <div className="pill-grid">
                     {TRAINING_DAYS.map((d) => (
@@ -1710,8 +1767,21 @@ export default function App() {
                       </button>
                     ))}
                   </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label">{t('Wanneer wil je starten?')}</div>
+              {/* SITUATIE: startmoment (laatste vraag vóór de contactstappen) */}
+              {currentStepId === "start_urgency" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Jouw Situatie')}</div>
+                  <div className="step-title">{t('Wanneer wil je starten?')}</div>
+                  <div className="step-sub">
+                    {t('Geen verplichting — dit helpt je coach de juiste prioriteit te geven.')}
+                  </div>
                   <div className="pill-grid">
                     {START_URGENCIES.map((u) => (
                       <button
@@ -1725,23 +1795,16 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-
                   <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>
                       {scanPath === "pain" ? t('Bekijk Mijn Analyse →') : t('Verder →')}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* ── STEP: Pain Location + Timing ── */}
+              {/* PIJN: locatie */}
               {currentStepId === "pain_location" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
                   <div className="step-label">{t('Pijnanalyse')}</div>
@@ -1751,7 +1814,6 @@ export default function App() {
                   <div className="step-sub">
                     {t('Selecteer alle gebieden die van toepassing zijn.')}
                   </div>
-
                   <div className="options-grid">
                     {PAIN_LOCATIONS.map((loc) => {
                       const sel = painData.painLocations.includes(loc.id);
@@ -1774,9 +1836,22 @@ export default function App() {
                       );
                     })}
                   </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label" style={{ marginTop: "28px" }}>
+              {/* PIJN: timing */}
+              {currentStepId === "pain_timing" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
+                  <div className="step-title">
                     {t('Wanneer heb je de meeste last?')}
+                  </div>
+                  <div className="step-sub">
+                    {t('Kies het moment dat het meest opvalt.')}
                   </div>
                   <div className="options-grid">
                     {PAIN_TIMINGS.map((pt) => (
@@ -1794,35 +1869,22 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-
                   <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
-                      {t('Volgende →')}
-                    </button>
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
                   </div>
                 </div>
               )}
 
-              {/* ── STEP: Pain Details (intensity + duration) ── */}
-              {currentStepId === "pain_details" && (
+              {/* PIJN: intensiteit */}
+              {currentStepId === "pain_intensity" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
                   <div className="step-label">{t('Pijnanalyse')}</div>
                   <div className="step-title">
-                    {t('Hoe erg en hoe lang heb je last?')}
+                    {t("Hoe erg is de pijn op z'n slechtste moment?")}
                   </div>
                   <div className="step-sub">
                     {t('Dit bepaalt hoe we je klacht inschatten en aanpakken.')}
-                  </div>
-
-                  <div className="section-label">
-                    {t('Gemiddeld pijnniveau (1–10)')}
                   </div>
                   <div className="scale-row">
                     {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
@@ -1841,8 +1903,21 @@ export default function App() {
                     <span>{t('Licht ongemak')}</span>
                     <span>{t('Ondraaglijk')}</span>
                   </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label">{t('Hoe lang heb je al last?')}</div>
+              {/* PIJN: duur */}
+              {currentStepId === "pain_duration" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
+                  <div className="step-title">{t('Hoe lang heb je al last?')}</div>
+                  <div className="step-sub">
+                    {t('De duur zegt veel over de fase waarin je klacht zit.')}
+                  </div>
                   <div className="options-grid">
                     {PAIN_DURATIONS.map((pd) => (
                       <button
@@ -1859,72 +1934,14 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-
                   <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
-                      {t('Volgende →')}
-                    </button>
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
                   </div>
                 </div>
               )}
 
-              {/* ── STEP: Pain Triggers ── */}
-              {currentStepId === "pain_triggers" && (
-                <div style={{ animation: "fadeUp 0.35s ease both" }}>
-                  <div className="step-label">{t('Pijnanalyse')}</div>
-                  <div className="step-title">
-                    {t('Welke bewegingen verergeren de pijn?')}
-                  </div>
-                  <div className="step-sub">
-                    {t('Selecteer alles wat van toepassing is.')}
-                  </div>
-
-                  <div className="options-grid">
-                    {PAIN_TRIGGERS.map((tr) => {
-                      const sel = painData.painTriggers.includes(tr.id);
-                      return (
-                        <button
-                          key={tr.id}
-                          className={`option-card ${sel ? "selected" : ""}`}
-                          onClick={() =>
-                            setPainData((d) => ({
-                              ...d,
-                              painTriggers: toggleMulti(d.painTriggers, tr.id),
-                            }))
-                          }
-                        >
-                          <span className="option-icon">{tr.icon}</span>
-                          <span className="option-label">{t(tr.label)}</span>
-                          <span className="option-sub">{t(tr.sub)}</span>
-                          <span className="option-check">✓</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
-                      {t('Volgende →')}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ── STEP: Pain Onset (mechanism + easing) ── */}
+              {/* PIJN: ontstaan */}
               {currentStepId === "pain_onset" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
                   <div className="step-label">{t('Pijnanalyse')}</div>
@@ -1934,7 +1951,6 @@ export default function App() {
                   <div className="step-sub">
                     {t('Het ontstaan zegt veel over de oorzaak en de juiste aanpak.')}
                   </div>
-
                   <div className="options-grid">
                     {PAIN_ONSETS.map((o) => (
                       <button
@@ -1951,9 +1967,20 @@ export default function App() {
                       </button>
                     ))}
                   </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label" style={{ marginTop: "28px" }}>
-                    {t('Wat verlicht de klacht?')}
+              {/* PIJN: wat verlicht */}
+              {currentStepId === "pain_easers" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
+                  <div className="step-title">{t('Wat verlicht de klacht?')}</div>
+                  <div className="step-sub">
+                    {t('Selecteer alles wat helpt — ook een beetje telt.')}
                   </div>
                   <div className="options-grid">
                     {PAIN_EASERS.map((e) => {
@@ -1977,24 +2004,54 @@ export default function App() {
                       );
                     })}
                   </div>
-
                   <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
-                      {t('Volgende →')}
-                    </button>
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
                   </div>
                 </div>
               )}
 
-              {/* ── STEP: Pain Context (red flags + functional test) ── */}
-              {currentStepId === "pain_context" && (
+              {/* PIJN: triggers */}
+              {currentStepId === "pain_triggers" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
+                  <div className="step-title">
+                    {t('Welke bewegingen verergeren de pijn?')}
+                  </div>
+                  <div className="step-sub">
+                    {t('Selecteer alles wat van toepassing is.')}
+                  </div>
+                  <div className="options-grid">
+                    {PAIN_TRIGGERS.map((tr) => {
+                      const sel = painData.painTriggers.includes(tr.id);
+                      return (
+                        <button
+                          key={tr.id}
+                          className={`option-card ${sel ? "selected" : ""}`}
+                          onClick={() =>
+                            setPainData((d) => ({
+                              ...d,
+                              painTriggers: toggleMulti(d.painTriggers, tr.id),
+                            }))
+                          }
+                        >
+                          <span className="option-icon">{tr.icon}</span>
+                          <span className="option-label">{t(tr.label)}</span>
+                          <span className="option-sub">{t(tr.sub)}</span>
+                          <span className="option-check">✓</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
+
+              {/* PIJN: alarmsignalen */}
+              {currentStepId === "pain_red_flags" && (
                 <div style={{ animation: "fadeUp 0.35s ease both" }}>
                   <div className="step-label">{t('Pijnanalyse')}</div>
                   <div className="step-title">
@@ -2003,7 +2060,6 @@ export default function App() {
                   <div className="step-sub">
                     {t('Belangrijk om serieus te screenen voordat we een plan opstellen.')}
                   </div>
-
                   <div className="options-grid">
                     {PAIN_RED_FLAGS.map((rf) => {
                       const sel = painData.painRedFlags.includes(rf.id);
@@ -2026,9 +2082,22 @@ export default function App() {
                       );
                     })}
                   </div>
+                  <div className="nav-row">
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
+                  </div>
+                </div>
+              )}
 
-                  <div className="section-label" style={{ marginTop: "28px" }}>
+              {/* PIJN: functietest */}
+              {currentStepId === "pain_function" && (
+                <div style={{ animation: "fadeUp 0.35s ease both" }}>
+                  <div className="step-label">{t('Pijnanalyse')}</div>
+                  <div className="step-title">
                     {t('Welke bewegingen lukken niet pijnvrij?')}
+                  </div>
+                  <div className="step-sub">
+                    {t('Een snelle functietest — kies wat niet soepel gaat.')}
                   </div>
                   <div className="options-grid">
                     {PAIN_FUNCTIONS.map((fn) => {
@@ -2052,22 +2121,12 @@ export default function App() {
                       );
                     })}
                   </div>
-
                   <div className="nav-row">
-                    <button className="back-btn" onClick={prevStep}>
-                      {t('← Terug')}
-                    </button>
-                    <button
-                      className="next-btn"
-                      onClick={nextStep}
-                      disabled={!canProceed()}
-                    >
-                      {t('Volgende →')}
-                    </button>
+                    <button className="back-btn" onClick={prevStep}>{t('← Terug')}</button>
+                    <button className="next-btn" onClick={nextStep} disabled={!canProceed()}>{t('Volgende →')}</button>
                   </div>
                 </div>
               )}
-
             </div>
           )}
 
