@@ -628,6 +628,16 @@ const dict = {
   'Bij plotselinge hevige klachten, koorts of verlies van controle over blaas of darmen: neem vandaag nog contact op met je huisarts.': {
     en: 'With sudden severe symptoms, fever, or loss of bladder or bowel control: contact your GP today.',
   },
+  // ────────── PLAN-TEASER OP RESULTAATPAGINA (plan alleen in de app) ──────────
+  'oefeningen': { en: 'exercises' },
+  'klaar in je account': { en: 'ready in your account' },
+  'Je volledige plan staat voor je klaar in je 9toFit-account: per dag precies wat je doet, met per oefening een video, sets, herhalingen en uitleg — zo voer je alles veilig en goed uit.': {
+    en: 'Your full plan is ready in your 9toFit account: exactly what to do each day, with a video, sets, reps and guidance for every exercise — so you do everything safely and correctly.',
+  },
+  'Check je inbox: daar staat je inloglink. Eén klik en je ziet je hele plan per dag.': {
+    en: 'Check your inbox: your login link is there. One click and you see your full day-by-day plan.',
+  },
+
   // ────────── V3: ÉÉN VRAAG PER SCHERM ──────────
   'Laatste stap': { en: 'Last step' },
   'Je screening is compleet — nog een paar korte vragen over jou.': { en: 'Your screening is complete — just a few short questions about you.' },

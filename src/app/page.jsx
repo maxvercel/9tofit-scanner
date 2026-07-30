@@ -2759,7 +2759,9 @@ export default function App() {
                 </div>
               )}
 
-              {/* 7-DAY PLAN */}
+              {/* 7-DAY PLAN — teaser: het plan zelf leeft in de app/het account.
+                  Geen dagtitels of oefeningen hier; wel de aantallen en een
+                  duidelijke verwijzing naar de inloglink in de mail. */}
               {plan.length > 0 && (
                 <div className="r-section" style={{ marginTop: "2px" }}>
                   <div className="r-sec-head">
@@ -2768,67 +2770,16 @@ export default function App() {
                       {t('Je 7-Daags Correctief Plan')}
                     </span>
                   </div>
-                  <div className="r-sec-body" style={{ padding: "16px" }}>
-                    <div className="plan-list">
-                      {plan.map((day, i) => (
-                        <div key={i} className="plan-day">
-                          <div
-                            className="plan-day-head"
-                            onClick={() =>
-                              setExpandedDays((p) => ({
-                                ...p,
-                                [i]: !p[i],
-                              }))
-                            }
-                          >
-                            <span className="plan-day-num">
-                              {t('Dag')} {day.day || i + 1}
-                            </span>
-                            <span className="plan-day-title">
-                              {day.title || day.theme || `${t('Dag')} ${i + 1}`}
-                            </span>
-                            {day.focus && (
-                              <span className="plan-day-focus">
-                                {day.focus}
-                              </span>
-                            )}
-                          </div>
-                          {expandedDays[i] && (
-                            <div className="plan-day-body">
-                              <div className="ex-list">
-                                {(day.exercises || []).map((ex, j) => (
-                                  <div key={j} className="ex-item">
-                                    <span className="ex-num">
-                                      {String(j + 1).padStart(2, "0")}
-                                    </span>
-                                    <div>
-                                      <div className="ex-name">{ex.name}</div>
-                                      {(ex.sets ||
-                                        ex.reps ||
-                                        ex.duration) && (
-                                        <div className="ex-spec">
-                                          {[ex.sets, ex.reps || ex.duration]
-                                            .filter(Boolean)
-                                            .join(" · ")}
-                                        </div>
-                                      )}
-                                      {ex.note && (
-                                        <div className="ex-note">
-                                          {ex.note}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                              {day.note && (
-                                <div className="day-note">{day.note}</div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                  <div className="r-sec-body">
+                    <p style={{ fontSize: "15px", fontWeight: 800, color: "#ffffff", marginBottom: "8px" }}>
+                      🔒 {plan.length} {t('dagen')} · {plan.reduce((n, d) => n + (Array.isArray(d?.exercises) ? d.exercises.length : 0), 0)} {t('oefeningen')} · {t('klaar in je account')}
+                    </p>
+                    <p>
+                      {t('Je volledige plan staat voor je klaar in je 9toFit-account: per dag precies wat je doet, met per oefening een video, sets, herhalingen en uitleg — zo voer je alles veilig en goed uit.')}
+                    </p>
+                    <p style={{ marginTop: "10px", color: "#f97316", fontWeight: 700 }}>
+                      📬 {t('Check je inbox: daar staat je inloglink. Eén klik en je ziet je hele plan per dag.')}
+                    </p>
                   </div>
                 </div>
               )}
