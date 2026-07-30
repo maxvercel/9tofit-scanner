@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useT, useLocale } from "../lib/i18n";
 import { trackLead, trackSchedule, getFbCookies, newEventId, hasConsent } from "../lib/metaPixel";
 
@@ -378,7 +378,9 @@ const STYLES = `
     .profile-card { padding: 16px; }
   }
 
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  /* Alleen opacity animeren — een translateY liet de layout tijdens de fade
+     verschuiven, waardoor snelle klikken op de verkeerde kaart landden. */
+  @keyframes fadeUp { from { opacity: 0; } to { opacity: 1; } }
   @keyframes spin { to { transform: rotate(360deg); } }
 `;
 
@@ -651,6 +653,48 @@ export default function App() {
     return () => { window.removeEventListener("message", onMsg); clearInterval(iv); };
   }, []);
 
+  // ── Voortgang bewaren bij refresh (sessionStorage) ──────────────────────
+  // Een onbedoelde refresh of navigatie op mobiel wist anders alle antwoorden
+  // — dat zijn onnodig verloren leads. We bewaren alleen tijdens de wizard
+  // (assessment/gate) en ruimen op bij versturen of een nieuwe scan.
+  const SAVE_KEY = "9tf_scan_progress_v1";
+
+  // Herstellen — bewust vóór het save-effect gedefinieerd; draait één keer.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = sessionStorage.getItem(SAVE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (!s || !s.scanPath || (s.phase !== "assessment" && s.phase !== "gate")) return;
+      setScanPath(s.scanPath);
+      if (s.data) setData((prev) => ({ ...prev, ...s.data }));
+      if (s.painData) setPainData((prev) => ({ ...prev, ...s.painData }));
+      if (s.userInfo) setUserInfo((prev) => ({ ...prev, ...s.userInfo }));
+      // Clamp op het geldige bereik van het opgeslagen pad (pijn: 16 vragen,
+      // fitness/fysio: 9) — een out-of-range stap zou een leeg scherm geven.
+      const maxStep = (s.scanPath === "pain" ? 16 : 9) - 1;
+      setStep(Number.isInteger(s.step) ? Math.min(Math.max(s.step, 0), maxStep) : 0);
+      setGateStep(Number.isInteger(s.gateStep) ? Math.min(Math.max(s.gateStep, 0), 2) : 0);
+      setPhase(s.phase);
+    } catch { /* corrupte state → gewoon vers beginnen */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Opslaan bij elke relevante wijziging tijdens de wizard.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (phase === "assessment" || phase === "gate") {
+        sessionStorage.setItem(SAVE_KEY, JSON.stringify({ phase, step, gateStep, scanPath, data, painData, userInfo }));
+      } else if (phase === "result" || phase === "success" || phase === "safety" || phase === "path_select") {
+        // Klaar (result/success/safety) of bewust terug naar de padkeuze:
+        // opgeslagen voortgang opruimen.
+        sessionStorage.removeItem(SAVE_KEY);
+      }
+    } catch { /* private mode e.d. — stil overslaan */ }
+  }, [phase, step, gateStep, scanPath, data, painData, userInfo]);
+
   // Report height to parent WordPress page so iframe resizes automatically
   useEffect(() => {
     const reportHeight = () => {
@@ -667,12 +711,18 @@ export default function App() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
+      // Als er opgeslagen wizard-voortgang is (refresh midden in de scan),
+      // mag een deep-link (?pad=/?ref=) die niet terugzetten naar stap 0.
+      let hasSavedProgress = false;
+      try { hasSavedProgress = !!sessionStorage.getItem(SAVE_KEY); } catch { /* ignore */ }
       const ref = params.get("ref") || "";
       if (ref.startsWith("fysio_")) {
         setData((d) => ({ ...d, referralSource: ref }));
-        setScanPath("fysio");
-        setPhase("assessment");
-        setStep(0);
+        if (!hasSavedProgress) {
+          setScanPath("fysio");
+          setPhase("assessment");
+          setStep(0);
+        }
       } else {
         // Deep-link direct in een pad (koude leads springen het keuzescherm over).
         // Werkt via ?pad=pijn|fitness|fysio, of als fallback utm_content=pijn|...
@@ -684,7 +734,7 @@ export default function App() {
         const padParam = (params.get("pad") || params.get("path") || "").toLowerCase();
         const utmContent = (params.get("utm_content") || "").toLowerCase();
         const deepPath = PATH_ALIASES[padParam] || PATH_ALIASES[utmContent] || "";
-        if (deepPath) {
+        if (deepPath && !hasSavedProgress) {
           setScanPath(deepPath);
           setPhase("assessment");
           setStep(0);
@@ -752,6 +802,17 @@ export default function App() {
   };
 
   const steps = getSteps();
+
+  // ── Sectie-voortgang: "Pijnanalyse · 4/9" leest lichter dan "Stap 4 van 19" ──
+  const SECTION_OF = {
+    pain_location: "Pijnanalyse", pain_timing: "Pijnanalyse", pain_intensity: "Pijnanalyse",
+    pain_duration: "Pijnanalyse", pain_onset: "Pijnanalyse", pain_easers: "Pijnanalyse",
+    pain_triggers: "Pijnanalyse", pain_red_flags: "Pijnanalyse", pain_function: "Pijnanalyse",
+    age: "Over jou", training_background: "Over jou", goals: "Over jou", intent: "Over jou",
+    work_situation: "Jouw Situatie", work_hours: "Jouw Situatie", children: "Jouw Situatie",
+    training_days: "Jouw Situatie", start_urgency: "Jouw Situatie",
+  };
+
   const leadTier = computeLeadTier(data, painData, scanPath).tier;
   // "Je gaf aan er nu mee aan de slag te willen" + WhatsApp-belofte alleen
   // tonen als de bezoeker dat ook écht aangaf (intent = nu een coach). Een
@@ -759,6 +820,9 @@ export default function App() {
   const hotContact = leadTier === "hot" && data.intent === "coach_now";
   const totalSteps = steps.length;
   const currentStepId = steps[step];
+  const currentSection = SECTION_OF[currentStepId] || "";
+  const sectionSteps = steps.filter((s) => SECTION_OF[s] === currentSection);
+  const sectionPos = sectionSteps.indexOf(currentStepId) + 1;
   // De 3 contactstappen (naam, e-mail, telefoon) tellen mee als echte stappen,
   // zodat de voortgangsbalk doorloopt tot 100% en het staplabel klopt.
   const GATE_STEPS = 3;
@@ -815,15 +879,36 @@ export default function App() {
   };
 
   const nextStep = () => {
+    // Altijd eerst een eventuele lopende auto-advance-timer annuleren:
+    // een handmatige "Volgende"-klik binnen 350ms na een selectie zou anders
+    // dubbel doorschakelen (stap overslaan of buiten bereik raken).
+    if (autoNextRef.current) { clearTimeout(autoNextRef.current); autoNextRef.current = null; }
     if (step < totalSteps - 1) {
-      setStep((s) => s + 1);
+      setStep((s) => Math.min(s + 1, totalSteps - 1));
     } else {
       setGateStep(0);
       setPhase("gate");
     }
   };
 
+  // ── Auto-advance: bij één-keuze-vragen schakelt de keuze zelf door ──
+  // (met korte vertraging zodat het vinkje zichtbaar is). Scheelt op 19
+  // stappen bijna 20 klikken; multi-selects en invoervelden houden hun
+  // Volgende-knop.
+  const autoNextRef = useRef(null);
+  useEffect(() => () => { if (autoNextRef.current) clearTimeout(autoNextRef.current); }, []);
+  const selectAndAdvance = (apply) => {
+    apply();
+    if (autoNextRef.current) clearTimeout(autoNextRef.current);
+    autoNextRef.current = setTimeout(() => {
+      autoNextRef.current = null;
+      nextStep();
+    }, 350);
+  };
+
   const prevStep = () => {
+    // Een lopende auto-advance annuleren, anders schiet de wizard direct weer vooruit.
+    if (autoNextRef.current) { clearTimeout(autoNextRef.current); autoNextRef.current = null; }
     if (step > 0) {
       setStep((s) => s - 1);
     } else {
@@ -1126,6 +1211,8 @@ export default function App() {
 
   // ── Reset ──
   const reset = () => {
+    if (autoNextRef.current) { clearTimeout(autoNextRef.current); autoNextRef.current = null; }
+    try { if (typeof window !== "undefined") sessionStorage.removeItem(SAVE_KEY); } catch { /* ignore */ }
     setPhase("landing");
     setStep(0);
     setScanPath("");
@@ -1464,7 +1551,7 @@ export default function App() {
               <div className="progress-wrap">
                 <div className="progress-top">
                   <span className="progress-label">
-                    {t('Stap')} {step + 1} {t('van')} {totalWithGate}
+                    {currentSection ? `${t(currentSection)} · ${sectionPos}/${sectionSteps.length}` : `${t('Stap')} ${step + 1} ${t('van')} ${totalWithGate}`}
                   </span>
                   <span className="progress-label">
                     {scanPath === "pain"
@@ -1493,6 +1580,11 @@ export default function App() {
                       {t('Doorgestuurd door je fysiotherapeut — je profiel is al voorbereid.')}
                     </div>
                   )}
+                  {scanPath === "pain" && (
+                    <div className="fysio-notice">
+                      ✓ {t('Je screening is compleet — nog een paar korte vragen over jou.')}
+                    </div>
+                  )}
                   <div className="step-label">{t('Over jou')}</div>
                   <div className="step-title">{t('Wat is je leeftijd?')}</div>
                   <div className="step-sub">
@@ -1503,7 +1595,7 @@ export default function App() {
                       <button
                         key={a.id}
                         className={`pill-btn ${data.ageRange === a.id ? "selected" : ""}`}
-                        onClick={() => setData((d) => ({ ...d, ageRange: a.id }))}
+                        onClick={() => selectAndAdvance(() => setData((d) => ({ ...d, ageRange: a.id })))}
                       >
                         {t(a.label)}
                       </button>
@@ -1530,7 +1622,7 @@ export default function App() {
                         key={bg.id}
                         className={`option-card ${data.trainingBackground === bg.id ? "selected" : ""}`}
                         onClick={() =>
-                          setData((d) => ({ ...d, trainingBackground: bg.id }))
+                          selectAndAdvance(() => setData((d) => ({ ...d, trainingBackground: bg.id })))
                         }
                       >
                         <span className="option-icon">{bg.icon}</span>
@@ -1614,7 +1706,7 @@ export default function App() {
                         key={it.id}
                         className={`option-card ${data.intent === it.id ? "selected" : ""}`}
                         onClick={() =>
-                          setData((d) => ({ ...d, intent: it.id }))
+                          selectAndAdvance(() => setData((d) => ({ ...d, intent: it.id })))
                         }
                       >
                         <span className="option-icon">{it.icon}</span>
@@ -1645,7 +1737,7 @@ export default function App() {
                         key={w.id}
                         className={`option-card ${data.workSituation === w.id ? "selected" : ""}`}
                         onClick={() =>
-                          setData((d) => ({ ...d, workSituation: w.id }))
+                          selectAndAdvance(() => setData((d) => ({ ...d, workSituation: w.id })))
                         }
                       >
                         <span className="option-icon">{w.icon}</span>
@@ -1676,7 +1768,7 @@ export default function App() {
                         key={h.id}
                         className={`pill-btn ${data.workHoursPerWeek === h.id ? "selected" : ""}`}
                         onClick={() =>
-                          setData((d) => ({ ...d, workHoursPerWeek: h.id }))
+                          selectAndAdvance(() => setData((d) => ({ ...d, workHoursPerWeek: h.id })))
                         }
                       >
                         {t(h.label)}
@@ -1702,16 +1794,20 @@ export default function App() {
                     <button
                       className={`pill-btn ${data.hasChildren === false ? "selected" : ""}`}
                       onClick={() =>
-                        setData((d) => ({ ...d, hasChildren: false, childrenCount: 0 }))
+                        // "Nee" is compleet → direct door; "Ja" opent eerst de vervolgvraag.
+                        selectAndAdvance(() => setData((d) => ({ ...d, hasChildren: false, childrenCount: 0 })))
                       }
                     >
                       {t('Nee')}
                     </button>
                     <button
                       className={`pill-btn ${data.hasChildren === true ? "selected" : ""}`}
-                      onClick={() =>
-                        setData((d) => ({ ...d, hasChildren: true, childrenCount: d.childrenCount || 1 }))
-                      }
+                      onClick={() => {
+                        // "Ja" opent de vervolgvraag — annuleer een eventuele
+                        // auto-advance van een eerdere "Nee"-klik.
+                        if (autoNextRef.current) { clearTimeout(autoNextRef.current); autoNextRef.current = null; }
+                        setData((d) => ({ ...d, hasChildren: true, childrenCount: d.childrenCount || 1 }));
+                      }}
                     >
                       {t('Ja')}
                     </button>
@@ -1725,7 +1821,7 @@ export default function App() {
                             key={n}
                             className={`pill-btn ${data.childrenCount === n ? "selected" : ""}`}
                             onClick={() =>
-                              setData((d) => ({ ...d, childrenCount: n }))
+                              selectAndAdvance(() => setData((d) => ({ ...d, childrenCount: n })))
                             }
                           >
                             {n}{n === 5 ? "+" : ""}
@@ -1757,10 +1853,10 @@ export default function App() {
                         key={d}
                         className={`pill-btn ${data.trainingDaysAvailable === d ? "selected" : ""}`}
                         onClick={() =>
-                          setData((prev) => ({
+                          selectAndAdvance(() => setData((prev) => ({
                             ...prev,
                             trainingDaysAvailable: d,
-                          }))
+                          })))
                         }
                       >
                         {d} {t('dagen')}
@@ -1788,7 +1884,7 @@ export default function App() {
                         key={u.id}
                         className={`pill-btn ${data.startUrgency === u.id ? "selected" : ""}`}
                         onClick={() =>
-                          setData((d) => ({ ...d, startUrgency: u.id }))
+                          selectAndAdvance(() => setData((d) => ({ ...d, startUrgency: u.id })))
                         }
                       >
                         {t(u.label)}
@@ -1859,7 +1955,7 @@ export default function App() {
                         key={pt.id}
                         className={`option-card ${painData.painTiming === pt.id ? "selected" : ""}`}
                         onClick={() =>
-                          setPainData((d) => ({ ...d, painTiming: pt.id }))
+                          selectAndAdvance(() => setPainData((d) => ({ ...d, painTiming: pt.id })))
                         }
                       >
                         <span className="option-icon">{pt.icon}</span>
@@ -1892,7 +1988,7 @@ export default function App() {
                         key={n}
                         className={`scale-btn ${painData.painIntensity === n ? "selected" : ""}`}
                         onClick={() =>
-                          setPainData((d) => ({ ...d, painIntensity: n }))
+                          selectAndAdvance(() => setPainData((d) => ({ ...d, painIntensity: n })))
                         }
                       >
                         {n}
@@ -1924,7 +2020,7 @@ export default function App() {
                         key={pd.id}
                         className={`option-card ${painData.painDuration === pd.id ? "selected" : ""}`}
                         onClick={() =>
-                          setPainData((d) => ({ ...d, painDuration: pd.id }))
+                          selectAndAdvance(() => setPainData((d) => ({ ...d, painDuration: pd.id })))
                         }
                       >
                         <span className="option-icon">{pd.icon}</span>
@@ -1957,7 +2053,7 @@ export default function App() {
                         key={o.id}
                         className={`option-card ${painData.painOnset === o.id ? "selected" : ""}`}
                         onClick={() =>
-                          setPainData((d) => ({ ...d, painOnset: o.id }))
+                          selectAndAdvance(() => setPainData((d) => ({ ...d, painOnset: o.id })))
                         }
                       >
                         <span className="option-icon">{o.icon}</span>
@@ -2137,7 +2233,7 @@ export default function App() {
                 <div className="progress-wrap" style={{ marginBottom: "18px" }}>
                   <div className="progress-top">
                     <span className="progress-label">
-                      {t('Stap')} {totalSteps + gateStep + 1} {t('van')} {totalWithGate}
+                      {t('Laatste stap')} · {gateStep + 1}/{GATE_STEPS}
                     </span>
                     <span className="progress-label">
                       {scanPath === "pain"

@@ -629,6 +629,8 @@ const dict = {
     en: 'With sudden severe symptoms, fever, or loss of bladder or bowel control: contact your GP today.',
   },
   // ────────── V3: ÉÉN VRAAG PER SCHERM ──────────
+  'Laatste stap': { en: 'Last step' },
+  'Je screening is compleet — nog een paar korte vragen over jou.': { en: 'Your screening is complete — just a few short questions about you.' },
   'Leeftijd bepaalt hoe we belasting en herstel voor je inschatten.': { en: 'Your age tells us how to gauge load and recovery for you.' },
   'Wat is je trainingservaring?': { en: 'What is your training experience?' },
   'Zo stemmen we het startniveau precies op jou af.': { en: 'This lets us match the starting level exactly to you.' },
