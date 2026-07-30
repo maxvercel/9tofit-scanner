@@ -1,0 +1,257 @@
+<!-- ============================================================
+     9toFit VSL / Sales Page — Hormozi-stijl (self-contained)
+     Plak dit volledige blok in de WordPress "Custom HTML" block (post 16034).
+     TE VERVANGEN DOOR MAX:
+       - Hoofdvideo: zoek <!-- VSL-VIDEO --> en vervang de placeholder-div
+         door je YouTube/Vimeo <iframe>.
+     De 4 review-video's zijn de ECHTE homepage-video's (Jason/Igor/Guido/Theo)
+     en spelen al af — niets aan te passen.
+     ============================================================ -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+.v9{--bg:#030303;--card:#111;--line:#333;--muted:#a1a1aa;--muted2:#71717a;--acc:#f97316;--txt:#fff;
+  background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,Arial,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+.v9 *{box-sizing:border-box;}
+.v9 .wrap{max-width:1080px;margin:0 auto;padding:0 20px;}
+.v9 .narrow{max-width:760px;margin:0 auto;}
+.v9 section{padding:72px 0;border-top:1px solid #141414;}
+.v9 .kick{color:var(--acc);font-weight:700;letter-spacing:2px;text-transform:uppercase;font-size:12px;margin:0 0 16px;}
+.v9 h1{font-size:44px;line-height:1.08;font-weight:900;margin:0 0 18px;letter-spacing:-.5px;}
+.v9 h2{font-size:34px;line-height:1.12;font-weight:900;margin:0 0 16px;letter-spacing:-.5px;}
+.v9 h3{font-size:19px;font-weight:800;margin:0 0 8px;}
+.v9 p{color:var(--muted);font-size:17px;margin:0 0 16px;}
+.v9 .lead{font-size:19px;color:#d4d4d8;}
+.v9 .center{text-align:center;}
+.v9 .btn{display:inline-block;text-decoration:none;font-weight:800;font-size:16px;padding:18px 36px;border-radius:12px;transition:transform .15s,box-shadow .15s;}
+.v9 .btn-primary{background:var(--acc);color:#fff;box-shadow:0 10px 30px rgba(249,115,22,.28);}
+.v9 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(249,115,22,.4);}
+.v9 .btn-ghost{background:transparent;color:#fff;border:1px solid var(--line);}
+.v9 .btn-ghost:hover{border-color:var(--acc);color:var(--acc);}
+.v9 .btn-wa{background:#25D366;color:#0a2e17;}
+.v9 .micro{color:var(--muted2);font-size:13px;margin:14px 0 0;}
+.v9 .grid{display:grid;gap:18px;}
+.v9 .g2{grid-template-columns:repeat(2,1fr);}
+.v9 .g3{grid-template-columns:repeat(3,1fr);}
+.v9 .gauto{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));}
+.v9 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px;}
+.v9 .card h3{color:#fff;}
+.v9 .card p{font-size:15px;margin:0;}
+.v9 .pill{display:inline-block;background:rgba(249,115,22,.12);color:var(--acc);font-weight:700;font-size:12px;padding:6px 12px;border-radius:999px;margin-bottom:14px;}
+.v9 .video{position:relative;padding-top:56.25%;background:#0c0c0c;border:1px solid var(--line);border-radius:16px;overflow:hidden;}
+.v9 .video-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;text-align:center;padding:16px;}
+.v9 .play{width:64px;height:64px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 8px 24px rgba(249,115,22,.4);}
+.v9 .play:after{content:"";border-style:solid;border-width:11px 0 11px 18px;border-color:transparent transparent transparent #fff;margin-left:4px;}
+.v9 .vcard{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;}
+.v9 .rvid{width:100%;height:auto;max-height:520px;display:block;background:#000;}
+.v9 .vcard .meta{padding:14px 16px;}
+.v9 .vcard .meta .nm{font-weight:800;font-size:15px;color:#fff;}
+.v9 .vcard .meta .nm .dur{color:var(--muted2);font-weight:600;font-size:12px;margin-left:6px;}
+.v9 .vcard .meta .rs{font-size:13px;color:var(--muted);margin-top:4px;}
+.v9 .vcard .meta .qt{font-size:13px;color:#d4d4d8;margin-top:8px;font-style:italic;}
+.v9 .vthumb{position:relative;width:100%;aspect-ratio:3/4;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:0;}
+.v9 .vthumb .vinit{font-size:64px;font-weight:900;color:rgba(255,255,255,.92);}
+.v9 .vthumb .vplay{position:absolute;width:58px;height:58px;border-radius:50%;background:var(--acc);box-shadow:0 8px 24px rgba(249,115,22,.45);}
+.v9 .vthumb .vplay:after{content:"";position:absolute;top:50%;left:50%;transform:translate(-40%,-50%);border-style:solid;border-width:10px 0 10px 16px;border-color:transparent transparent transparent #fff;}
+.v9 .vthumb .vdur{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.6);color:#fff;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;}
+.v9 .gc1{background:linear-gradient(140deg,#f97316,#7c2d12);}.v9 .gc2{background:linear-gradient(140deg,#f59e0b,#78350f);}.v9 .gc3{background:linear-gradient(140deg,#fb923c,#431407);}.v9 .gc4{background:linear-gradient(140deg,#ea580c,#3f1d0b);}
+.v9 .stars{color:#f5b301;letter-spacing:2px;font-size:15px;}
+.v9 .proof{display:flex;flex-wrap:wrap;gap:14px 40px;justify-content:center;align-items:center;}
+.v9 .proof .it{text-align:center;}
+.v9 .proof .n{font-size:30px;font-weight:900;color:#fff;line-height:1;}
+.v9 .proof .l{font-size:13px;color:var(--muted);margin-top:6px;}
+.v9 .cost{background:linear-gradient(180deg,rgba(249,115,22,.06),transparent);border:1px solid #2a1a0e;border-radius:16px;padding:24px 26px;margin-top:24px;}
+.v9 .step{display:flex;gap:18px;align-items:flex-start;}
+.v9 .step .no{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:rgba(249,115,22,.12);color:var(--acc);font-weight:900;font-size:18px;display:flex;align-items:center;justify-content:center;}
+/* value stack */
+.v9 .stack{max-width:720px;margin:0 auto;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:8px 30px 30px;}
+.v9 .stack .row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:18px 0;border-bottom:1px solid #1c1c1c;}
+.v9 .stack .row:last-of-type{border-bottom:0;}
+.v9 .stack .row .t{display:flex;gap:12px;align-items:flex-start;}
+.v9 .stack .row .chk{color:var(--acc);font-weight:900;font-size:16px;flex:0 0 auto;line-height:1.5;}
+.v9 .stack .row .d{font-size:15px;color:#e4e4e7;font-weight:600;}
+.v9 .stack .row .d small{display:block;color:var(--muted2);font-weight:500;font-size:13px;margin-top:2px;}
+.v9 .stack .row .val{color:var(--muted);font-size:14px;font-weight:700;white-space:nowrap;}
+.v9 .stack .total{display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:22px;border-top:2px solid #2a2a2a;}
+.v9 .stack .total .lab{font-weight:800;color:#fff;font-size:16px;}
+.v9 .stack .total .amt{font-weight:900;color:var(--muted);font-size:20px;}
+.v9 .stack .total .amt s{color:var(--muted2);}
+.v9 .reveal{text-align:center;margin-top:26px;}
+.v9 .reveal .lab{color:var(--muted);font-size:14px;text-transform:uppercase;letter-spacing:2px;font-weight:700;}
+.v9 .reveal .big{font-size:48px;font-weight:900;color:#fff;line-height:1.05;margin:6px 0 0;}
+.v9 .reveal .big span{color:var(--acc);}
+.v9 .bonus{border:1px dashed #3a2a14;background:rgba(249,115,22,.05);border-radius:14px;padding:18px 22px;margin-top:22px;}
+.v9 .bonus b{color:var(--acc);}
+/* tiers */
+.v9 .price{font-size:38px;font-weight:900;color:#fff;line-height:1;}
+.v9 .price small{font-size:14px;color:var(--muted);font-weight:600;}
+.v9 .anchor{color:var(--muted2);font-size:13px;margin:6px 0 0;}
+.v9 .anchor s{color:#5b5b5b;}
+.v9 .feat{list-style:none;padding:0;margin:16px 0 0;}
+.v9 .feat li{font-size:14px;color:#d4d4d8;padding:8px 0 8px 26px;position:relative;border-top:1px solid #1c1c1c;}
+.v9 .feat li:before{content:"✓";position:absolute;left:0;color:var(--acc);font-weight:900;}
+.v9 .feat li b{color:#fff;}
+.v9 .featured{border:2px solid var(--acc);background:linear-gradient(180deg,rgba(249,115,22,.08),var(--card));position:relative;}
+.v9 .tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--acc);color:#fff;font-weight:800;font-size:12px;padding:6px 16px;border-radius:999px;white-space:nowrap;}
+.v9 .guar{border:1px solid #234b2e;background:linear-gradient(180deg,rgba(37,211,102,.06),transparent);border-radius:16px;padding:30px;}
+.v9 .faq{border-top:1px solid #1c1c1c;padding:20px 0;}
+.v9 .faq h3{color:#fff;margin-bottom:6px;}
+.v9 .faq p{margin:0;font-size:15px;}
+.v9 .coachrow{display:flex;gap:40px;align-items:center;flex-wrap:wrap;justify-content:center;}
+.v9 .coachphoto{width:100%;max-width:460px;aspect-ratio:3/2;border-radius:18px;overflow:hidden;flex:0 0 auto;background:#111;border:1px solid var(--line);}
+.v9 .coachphoto img{width:100%;height:100%;object-fit:cover;display:block;}
+.v9 .coachbio{flex:1;min-width:280px;max-width:560px;}
+.v9 .creds{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
+.v9 .creds span{background:#161616;border:1px solid var(--line);color:#d4d4d8;font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;}
+@media(max-width:600px){.v9 .coachphoto{max-width:none;}}
+.v9sticky{position:fixed;left:0;right:0;bottom:0;z-index:9999;background:rgba(5,5,5,.96);border-top:1px solid #2a2a2a;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transform:translateY(120%);transition:transform .3s ease;padding:12px 16px;}
+.v9sticky.show{transform:translateY(0);}
+.v9sticky .inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:14px;}
+.v9sticky .stxt{color:#fff;font-weight:700;font-size:15px;}
+.v9sticky .btn{padding:12px 24px;font-size:15px;margin:0;}
+@media(max-width:600px){.v9sticky .stxt{display:none;}.v9sticky .inner{justify-content:center;}.v9sticky .btn{width:100%;text-align:center;}}
+@media(max-width:820px){.v9 h1{font-size:32px;}.v9 h2{font-size:26px;}.v9 .g2,.v9 .g3{grid-template-columns:1fr;}.v9 section{padding:52px 0;}.v9 .stack{padding:8px 18px 24px;}.v9 .reveal .big{font-size:38px;}}
+</style>
+<div class="v9">
+  <!-- HERO -->
+  <section style="border-top:0;padding-top:64px;"><div class="wrap center">
+    <p class="kick">Gratis videotraining &middot; voor mannen 30&ndash;55 met terugkerende klachten</p>
+    <h1>Word Sterker Dan Ooit &mdash;<br>Zonder Dat Je Lichaam<br>Je Steeds Terugfluit</h1>
+    <p class="lead narrow">Bekijk de korte video en ontdek het systeem waarmee ik drukbezette mannen pijnvrij sterker maak &mdash; met een schema dat zich aanpast aan j&oacute;uw lichaam, niet andersom.</p>
+    <div class="narrow" style="margin:28px auto 0;">
+      <div class="video"><iframe src="https://www.youtube.com/embed/ycA_F2df9QA?rel=0&amp;modestbranding=1" style="position:absolute;inset:0;width:100%;height:100%;border:0;" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen title="9toFit VSL"></iframe></div>
+    </div>
+    <div style="margin-top:30px;"><a href="#offer" class="btn btn-primary">Bekijk de trajecten &amp; start vandaag &darr;</a></div>
+    <p class="micro">Direct starten &middot; 90 dagen sterker-garantie &middot; maandelijks opzegbaar</p>
+    <p style="margin-top:10px;"><a href="https://wa.me/31640113182" style="color:#25D366;font-weight:600;text-decoration:none;">Liever eerst sparren? App me op WhatsApp &rarr;</a></p>
+  </div></section>
+
+  <!-- PROOF BAR -->
+  <section style="padding:34px 0;"><div class="wrap proof">
+    <div class="it"><div class="n">4,9<span style="font-size:16px;">/5</span></div><div class="l stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div></div>
+    <div class="it"><div class="n">150+</div><div class="l">leden begeleid</div></div>
+    <div class="it"><div class="n">93%</div><div class="l">pijnvrij na 12 weken</div></div>
+    <div class="it"><div class="n">7 dagen</div><div class="l">tot je eerste schema</div></div>
+  </div></section>
+
+  <!-- PROBLEM -->
+  <section><div class="wrap">
+    <p class="kick center">Herkenbaar?</p>
+    <h2 class="center">Je Traint Hard. Waarom Blijft<br>Je Lichaam Kapotgaan?</h2>
+    <p class="center narrow" style="margin-bottom:32px;">Je bent gemotiveerd. Je verschijnt. En t&oacute;ch loop je vast &mdash; steeds op hetzelfde punt. Dit is waarom:</p>
+    <div class="grid g2">
+      <div class="card"><h3>De blessure-cyclus</h3><p>Net als je momentum pakt, gaat er iets. Rug, knie, schouder. Je bouwt op, valt terug, en begint weer van voren af aan.</p></div>
+      <div class="card"><h3>Plateaus die niet breken</h3><p>Dezelfde gewichten, dezelfde reps, maand na maand. Je werkt hard maar het lichaam verandert niet meer.</p></div>
+      <div class="card"><h3>Schema-roulette</h3><p>Elk half jaar een nieuw programma van internet. Nooit &eacute;&eacute;n lijn, nooit lang genoeg voor &eacute;cht resultaat.</p></div>
+      <div class="card"><h3>Geen tijd om het uit te zoeken</h3><p>Werk, gezin, agenda vol. Je wilt niet studeren op periodisering &mdash; je wilt gewoon dat het kl&oacute;pt en werkt.</p></div>
+    </div>
+    <div class="cost narrow"><p style="color:#fff;margin:0;font-size:16px;"><strong>De echte prijs van het laten lopen:</strong> elk jaar kost je dit 6&ndash;12 maanden vooruitgang, 2&ndash;3 nieuwe blessures en al snel &euro;1.000+ aan fysio &mdash; terwijl je conditie en kracht langzaam achteruitgaan in plaats van vooruit.</p></div>
+  </div></section>
+
+  <!-- MECHANISM -->
+  <section><div class="wrap">
+    <p class="kick center">De oplossing</p>
+    <h2 class="center">Een Coach Die Ziet Wat<br>Jij Niet Voelt</h2>
+    <p class="center narrow" style="margin-bottom:32px;">Geen los schema. Een systeem dat elke week meekijkt, meet en bijstuurt &mdash; zodat je sterker wordt binnen wat je lichaam die week aankan.</p>
+    <div class="grid g2">
+      <div class="card"><span class="pill">01</span><h3>Readiness-check</h3><p>Elke dag een 20-seconden check op slaap, herstel en energie. Het schema past zich aan &mdash; zwaar als je fris bent, slim als je moe bent.</p></div>
+      <div class="card"><span class="pill">02</span><h3>Load-monitoring</h3><p>Je belasting wordt bijgehouden zodat je progressief overbelast z&oacute;nder over de rand te gaan. Precies d&aacute;&aacute;r waar blessures ontstaan.</p></div>
+      <div class="card"><span class="pill">03</span><h3>Slimme progressie</h3><p>Automatische gewicht- en rep-progressie op basis van wat je &eacute;cht liftte. Geen giswerk, geen plateaus die blijven hangen.</p></div>
+      <div class="card"><span class="pill">04</span><h3>Periodisering</h3><p>Kracht-, hypertrofie- en herstelblokken die logisch op elkaar volgen. E&eacute;n doorlopende lijn i.p.v. schema-roulette.</p></div>
+    </div>
+  </div></section>
+
+  <!-- HOW IT WORKS -->
+  <section><div class="wrap narrow">
+    <h2 class="center">Drie Stappen. E&eacute;n Systeem.</h2>
+    <p class="center" style="margin-bottom:36px;">Binnen een week train je met een schema dat op jou is gebouwd.</p>
+    <div class="grid" style="gap:26px;">
+      <div class="step"><div class="no">01</div><div><h3>Kies je traject</h3><p>Je scan is al binnen. Nu kies je hoeveel begeleiding je wilt &mdash; en je account staat direct klaar.</p></div></div>
+      <div class="step"><div class="no">02</div><div><h3>Ik bouw jouw schema</h3><p>Op basis van je scan bouw ik een schema dat rekening houdt met je klachten, je niveau en je agenda. Geen kopie &mdash; op maat.</p></div></div>
+      <div class="step"><div class="no">03</div><div><h3>Wekelijkse review &amp; bijsturing</h3><p>Ik kijk mee, geef feedback en stuur je progressie bij. Jij traint, ik zorg dat het blijft kloppen &mdash; week na week.</p></div></div>
+    </div>
+  </div></section>
+
+  <!-- VIDEO REVIEWS (echte homepage-video's) -->
+  <section><div class="wrap">
+    <p class="kick center">// Bewezen resultaten</p>
+    <h2 class="center">Bekijk Hun Verhaal</h2>
+    <p class="center narrow" style="margin-bottom:26px;">Geen acteurs. Geen scripts. Echte leden die vertellen hoe ze van blessures naar pijnvrij trainen gingen.</p>
+    <div class="proof" style="margin-bottom:34px;">
+      <div class="it"><div class="n">4,9</div><div class="l stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div></div>
+      <div class="it"><div class="n">150+</div><div class="l">leden begeleid</div></div>
+      <div class="it"><div class="n">93%</div><div class="l">pijnvrij na 12 weken</div></div>
+    </div>
+    <div class="grid gauto">
+      <div class="vcard"><button class="vthumb gc1" data-src="https://9tofit.nl/wp-content/uploads/2026/04/Jason-Review-.mp4" onclick="vtPlay(this)" aria-label="Speel review van Jason af"><span class="vinit">J</span><span class="vplay"></span><span class="vdur">1:06</span></button><div class="meta"><div class="nm">Jason</div><div class="rs">Fitness &middot; personal coaching</div><div class="qt">"Hier wordt echt naar je lichaam gekeken."</div></div></div>
+      <div class="vcard"><button class="vthumb gc2" data-src="https://9tofit.nl/wp-content/uploads/2026/04/Igor-Review-2.mp4" onclick="vtPlay(this)" aria-label="Speel review van Igor af"><span class="vinit">I</span><span class="vplay"></span><span class="vdur">1:05</span></button><div class="meta"><div class="nm">Igor</div><div class="rs">Hardloper &middot; revalidatie</div><div class="qt">"Van blessure naar sterker dan ooit."</div></div></div>
+      <div class="vcard"><button class="vthumb gc3" data-src="https://9tofit.nl/wp-content/uploads/2026/04/Guido-Review.mp4" onclick="vtPlay(this)" aria-label="Speel review van Guido af"><span class="vinit">G</span><span class="vplay"></span><span class="vdur">0:46</span></button><div class="meta"><div class="nm">Guido</div><div class="rs">Ondernemer &middot; fit blijven</div><div class="qt">"Een aanpak die bij mijn drukke schema past."</div></div></div>
+      <div class="vcard"><button class="vthumb gc4" data-src="https://9tofit.nl/wp-content/uploads/2026/04/Theo-Review.mp4" onclick="vtPlay(this)" aria-label="Speel review van Theo af"><span class="vinit">T</span><span class="vplay"></span><span class="vdur">0:59</span></button><div class="meta"><div class="nm">Theo</div><div class="rs">Chronische pijn</div><div class="qt">"Na jaren klachten eindelijk een structurele oplossing."</div></div></div>
+    </div>
+    <script>function vtPlay(b){var u=b.getAttribute("data-src");var v=document.createElement("video");v.src=u;v.controls=true;v.autoplay=true;v.setAttribute("playsinline","");v.className="rvid";b.parentNode.replaceChild(v,b);try{v.play();}catch(e){}}</script>
+  </div></section>
+
+  <!-- IN CIJFERS -->
+  <section style="padding:46px 0;"><div class="wrap"><p class="kick center">9toFit in cijfers</p><div class="proof" style="margin-top:18px;"><div class="it"><div class="n">967</div><div class="l">workouts voltooid</div></div><div class="it"><div class="n">8,9 mln</div><div class="l">kg samen getild</div></div><div class="it"><div class="n">11.287</div><div class="l">sets gelogd</div></div></div></div></section>
+
+  <!-- COACH -->
+  <section><div class="wrap"><div class="coachrow"><div class="coachphoto"><img src="https://9tofit.nl/wp-content/uploads/2026/07/IMG_0108.jpg" alt="Max - fysio en coach voor het rugby-ereklasseteam"></div><div class="coachbio"><p class="kick">Ontmoet je coach</p><h2 style="margin-bottom:14px;">Ik Ben Max</h2><p>Personal trainer sinds 2014 en fysiotherapeut sinds 2022. Als strength &amp; conditioning coach en fysio voor een rugby-ereklasseteam heb ik van dichtbij gezien wat het verschil maakt: sterker worden &eacute;n je lichaam heel houden.</p><p>Die combinatie &mdash; kracht opbouwen zonder jezelf te slopen &mdash; is precies waar 9toFit op gebouwd is. Geen los schema, maar een coach die elke week met je meekijkt.</p><div class="creds"><span>Fysiotherapeut sinds 2022</span><span>Strength &amp; conditioning coach</span><span>Fysio rugby-ereklasse</span><span>Personal trainer sinds 2014</span></div></div></div></div></section>
+
+  <!-- TRANSFORMATION -->
+  <section><div class="wrap"><p class="kick center">Waar dit je brengt</p><h2 class="center">Waar Sta Je Over 12 Weken?</h2><p class="center narrow" style="margin-bottom:32px;">Geen quick fix &mdash; een lichaam dat weer meewerkt. Dit is wat leden na een blok merken:</p><div class="grid g2"><div class="card"><h3>Je tilt zwaarder &mdash; veilig</h3><p>Meer kracht, met een lichaam dat meewerkt in plaats van tegenwerkt.</p></div><div class="card"><h3>Klachten onder controle</h3><p>De pijn die steeds terugkwam heeft een plan &mdash; en blijft weg.</p></div><div class="card"><h3>Geen giswerk meer</h3><p>Je weet elke training precies wat je doet en waarom.</p></div><div class="card"><h3>Zichtbare vooruitgang</h3><p>Zwart-op-wit zien dat je sterker wordt, week na week.</p></div></div></div></section>
+
+  <!-- OFFER: VALUE STACK -->
+  <section id="offer"><div class="wrap">
+    <p class="kick center">Wat je krijgt</p>
+    <h2 class="center">Alles Om Pijnvrij Sterker<br>Te Worden &mdash; In &Eacute;&eacute;n Systeem</h2>
+    <p class="center narrow" style="margin-bottom:34px;">Dit zit in elk traject. Los zou je hiervoor bij een personal trainer, fysio en voedingscoach apart betalen. Bij mij zit het in &eacute;&eacute;n aanpak.</p>
+    <div class="stack">
+      <div class="row"><div class="t"><span class="chk">&#10003;</span><span class="d">Persoonlijk trainingsschema, elke week bijgestuurd door je coach<small>Op maat voor je klachten, niveau en agenda &mdash; geen kopie</small></span></div><span class="val">t.w.v. &euro;160/mnd</span></div>
+      <div class="row"><div class="t"><span class="chk">&#10003;</span><span class="d">Dagelijkse readiness-check + automatische progressie<small>Je schema past zich aan wat je lichaam die dag aankan</small></span></div><span class="val">t.w.v. &euro;70/mnd</span></div>
+      <div class="row"><div class="t"><span class="chk">&#10003;</span><span class="d">Blessure-preventie &amp; herstelopbouw op maat<small>Veilig opbouwen precies daar waar het bij jou misgaat</small></span></div><span class="val">t.w.v. &euro;95/mnd</span></div>
+      <div class="row"><div class="t"><span class="chk">&#10003;</span><span class="d">Volledige app: PR-tracking, load-monitoring &amp; gewoontes<small>Zie zwart-op-wit dat je sterker wordt</small></span></div><span class="val">t.w.v. &euro;45/mnd</span></div>
+      <div class="row"><div class="t"><span class="chk">&#10003;</span><span class="d">Directe app-chat met je coach<small>Vragen, twijfels of aanpassingen? Kort lijntje, snel antwoord</small></span></div><span class="val">t.w.v. &euro;120/mnd</span></div>
+      <div class="row"><div class="t"><span class="chk">&#10003;</span><span class="d">Voedings- &amp; herstelrichtlijnen<small>Zodat je training ook buiten de gym rendeert</small></span></div><span class="val">t.w.v. &euro;60/mnd</span></div>
+      <div class="total"><span class="lab">Totale waarde</span><span class="amt"><s>&euro;550</s> per maand</span></div>
+      <div class="reveal"><div class="lab">Jouw investering vanaf</div><div class="big">&euro;229<span> /4 weken</span></div></div>
+      <div class="bonus center"><b>Start deze maand &rarr;</b> persoonlijk intake-gesprek <b>(t.w.v. &euro;95)</b> en je eerste schema op maat binnen 7 dagen.</div>
+    </div>
+
+    <h3 class="center" style="font-size:22px;margin:52px 0 6px;color:#fff;">Kies je begeleidingsniveau</h3>
+    <p class="center micro" style="margin-bottom:26px;">Zelfde systeem &mdash; jij bepaalt hoev&eacute;&eacute;l ik met je meekijk. Prijs per 4 weken bij een 24-maanden traject.</p>
+    <div class="grid g2" style="align-items:stretch;max-width:760px;margin:0 auto;">
+      <div class="card featured"><div class="tag">MEEST GEKOZEN</div><h3>REBUILD</h3><p style="color:var(--muted2);font-size:13px;margin-bottom:14px;">Voor wie &eacute;cht wil rebuilden m&eacute;t coaching</p><div class="price">&euro;229<small> /4 wk</small></div><p class="anchor">Vergelijkbare coaching: <s>&euro;450+/mnd</s></p><ul class="feat"><li><b>De complete methode</b> (alles hierboven)</li><li>2&times; persoonlijke coaching per maand</li><li>Direct chat-contact met mij</li><li>Voortgangsrapporten &amp; bijsturing</li></ul><a href="https://app.9tofit.nl/portal/checkout/app_2x_coaching/24_months" class="btn btn-primary" style="display:block;text-align:center;margin-top:20px;">Kies REBUILD &rarr;</a></div>
+      <div class="card"><h3>MOVE MAX</h3><p style="color:var(--muted2);font-size:13px;margin-bottom:14px;">Maximale begeleiding, snelste resultaat</p><div class="price">&euro;349<small> /4 wk</small></div><p class="anchor">1-op-1 traject elders: <s>&euro;700+/mnd</s></p><ul class="feat"><li><b>Alles uit REBUILD</b></li><li>Wekelijkse coaching-sessie</li><li>Video-evaluatie van je techniek</li><li>Cardio- &amp; herstelplan + VIP-support</li></ul><a href="https://app.9tofit.nl/portal/checkout/app_4x_coaching/24_months" class="btn btn-ghost" style="display:block;text-align:center;margin-top:20px;">Kies MOVE MAX &rarr;</a></div>
+    </div>
+    <p class="center micro">Ook 12- en 18-maanden looptijden op de checkout-pagina. Ik neem een beperkt aantal nieuwe leden per maand aan zodat de begeleiding persoonlijk blijft. Twijfel je? <a href="https://wa.me/31640113182" style="color:#25D366;text-decoration:none;">App me even &rarr;</a></p>
+  </div></section>
+
+  <!-- GUARANTEE -->
+  <section><div class="wrap narrow"><div class="guar center">
+    <div style="font-size:38px;">&#128737;</div>
+    <h2 style="font-size:26px;margin-top:8px;">90 Dagen Sterker-Garantie</h2>
+    <p style="margin:0;">Train 90 dagen volgens je schema. Ben je niet merkbaar sterker, met minder klachten en meer grip op je training? Dan <strong style="color:#25D366;">coach ik je gratis door</strong> tot je dat w&eacute;l bent. Het risico ligt bij mij, niet bij jou.</p>
+  </div></div></section>
+
+  <!-- FAQ -->
+  <section><div class="wrap narrow">
+    <h2 class="center" style="margin-bottom:30px;">Veelgestelde Vragen</h2>
+    <div class="faq"><h3>Ik heb blessures/pijn &mdash; is dit wel geschikt?</h3><p>Juist w&eacute;l. Het systeem is gebouwd rond mannen met terugkerende klachten. We starten op wat je lichaam aankan en bouwen veilig op. Bij pijn krijg je een herstelgericht startprogramma.</p></div>
+    <div class="faq"><h3>Ik heb weinig tijd. Hoeveel kost me dit per week?</h3><p>Je bepaalt zelf je trainingsdagen (2&ndash;5 per week). Het schema wordt daarop gebouwd. De dagelijkse check kost 20 seconden. Ik doe het denkwerk, jij traint.</p></div>
+    <div class="faq"><h3>Moet ik ervaren zijn in de sportschool?</h3><p>Nee. Van beginner tot gevorderd &mdash; het schema past zich aan je niveau aan en groeit met je mee.</p></div>
+    <div class="faq"><h3>Kan ik opzeggen wanneer ik wil?</h3><p>Je kiest zelf je looptijd. En je hebt 90 dagen sterker-garantie, dus je kunt het risicoloos proberen.</p></div>
+    <div class="faq"><h3>Is dit niet duur?</h3><p>Reken het terug: &eacute;&eacute;n terugkerende blessure kost je al snel maanden progressie en &euro;1.000+ aan fysio. Dit voorkomt dat juist &mdash; een coach die elke week meekijkt, voor minder dan een paar losse PT-sessies per maand.</p></div>
+    <div class="faq"><h3>Wat als ik niet weet welk traject past?</h3><p>App me even op WhatsApp &mdash; dan denk ik met je mee welk niveau bij jou past, zonder verplichting.</p></div>
+  </div></section>
+
+  <!-- FINAL CTA -->
+  <section style="padding:72px 0 90px;"><div class="wrap narrow center">
+    <p class="kick">Klaar om te beginnen?</p>
+    <h2>Laat Je Lichaam Weer<br>M&eacute;t Je Meewerken</h2>
+    <p style="margin-bottom:28px;">Stop met opbouwen-en-terugvallen. Kies je traject en train vanaf vandaag met een systeem dat op j&oacute;u is gebouwd.</p>
+    <a href="#offer" class="btn btn-primary">Bekijk de trajecten &amp; start vandaag &rarr;</a>
+    <div style="margin-top:18px;"><a href="#offer" class="btn btn-ghost" style="margin-right:8px;">Bekijk de trajecten</a> <a href="https://wa.me/31640113182" class="btn btn-wa">WhatsApp mij</a></div>
+    <p class="micro">90 dagen sterker-garantie &middot; direct starten &middot; persoonlijke begeleiding</p>
+  </div></section>
+  <div class="v9sticky" id="v9sticky"><div class="inner"><span class="stxt">Klaar om pijnvrij sterker te worden?</span><a href="#offer" class="btn btn-primary">Kies je traject &rarr;</a></div></div>
+  <script>(function(){var s=document.getElementById("v9sticky");if(!s)return;function u(){if(window.scrollY>700){s.classList.add("show");}else{s.classList.remove("show");}}window.addEventListener("scroll",u,{passive:true});u();})();</script>
+</div>

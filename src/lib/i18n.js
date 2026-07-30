@@ -485,6 +485,24 @@ const dict = {
 
   // ────────── GATE (extended) ──────────
   'Scan voltooid': { en: 'Scan complete' },
+
+  // ────── GATE IN LOSSE STAPPEN ──────
+  'Bijna klaar': { en: 'Almost done' },
+  'Laatste stap': { en: 'Final step' },
+  'Laatste stap — optioneel': { en: 'Final step — optional' },
+  'Voor wie mogen we het klaarzetten?': { en: 'Who should we prepare it for?' },
+  'Top': { en: 'Great' },
+  'Waar mogen we je rapport naartoe sturen?': { en: 'Where should we send your report?' },
+  'Waar mogen we je profiel + plan naartoe sturen?': { en: 'Where should we send your profile + plan?' },
+  'Je persoonlijke bewegingsanalyse en 7-daags correctief plan, direct via e-mail.': {
+    en: 'Your personal movement analysis and 7-day corrective plan, straight to your inbox.',
+  },
+  'Wil je dat je coach even met je meekijkt?': { en: 'Want your coach to take a quick look with you?' },
+  'Laat je (WhatsApp-)nummer achter zodat je coach je snel kan bereiken. Liever niet? Sla deze stap gewoon over.': {
+    en: 'Leave your (WhatsApp) number so your coach can reach you quickly. Rather not? Just skip this step.',
+  },
+  'Overslaan en mijn rapport bekijken →': { en: 'Skip and view my report →' },
+  'Overslaan en mijn profiel bekijken →': { en: 'Skip and view my profile →' },
   'Pijn & Prestatie Analyse': { en: 'Pain & Performance Analysis' },
   'Performance Profiel': { en: 'Performance Profile' },
   'Je rapport is klaar.': { en: 'Your report is ready.' },

@@ -210,6 +210,11 @@ const STYLES = `
     padding: 6px 12px; background: var(--warm); border: 1px solid var(--border); border-radius: 8px;
     font-size: 10px; font-weight: 600; color: var(--muted-light); filter: blur(3px);
   }
+  .gate-progress { margin-bottom: 28px; }
+  .gate-skip { display: block; width: 100%; text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); background: none; border: none; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+  .gate-skip:hover { color: var(--text); }
+  .gate-back { background: none; border: none; color: var(--muted); font-size: 13px; cursor: pointer; margin-top: 24px; padding: 0; }
+  .gate-back:hover { color: var(--text); }
   .gate-error { font-size: 12px; font-weight: 600; color: #ef4444; margin-bottom: 16px; padding: 12px 14px; border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.06); border-radius: var(--radius-sm); }
   .gate-fields { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 18px; }
   @media(max-width:560px){ .gate-fields { grid-template-columns: 1fr; } }
@@ -603,6 +608,8 @@ export default function App() {
 
   // User info (gate)
   const [userInfo, setUserInfo] = useState({ name: "", email: "", phone: "" });
+  // Gate in losse micro-stappen: 0 = voornaam, 1 = e-mail, 2 = telefoon (optioneel)
+  const [gateStep, setGateStep] = useState(0);
 
   // AI result (pain path only)
   const [result, setResult] = useState(null);
@@ -771,6 +778,7 @@ export default function App() {
     if (step < totalSteps - 1) {
       setStep((s) => s + 1);
     } else {
+      setGateStep(0);
       setPhase("gate");
     }
   };
@@ -1017,6 +1025,7 @@ export default function App() {
     setData((prev) => ({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", intent: "", referralSource: "", utm: prev.utm }));
     setPainData({ painLocations: [], painIntensity: 5, painDuration: "", painTiming: "", painTriggers: [] });
     setUserInfo({ name: "", email: "", phone: "" });
+    setGateStep(0);
     setResult(null);
     setError(null);
     setEmailSent(false);
@@ -1990,109 +1999,225 @@ export default function App() {
           {/* ═══════ GATE (email capture) ═══════ */}
           {phase === "gate" && (
             <div className="gate">
-              <div className="gate-box">
-                <div className="gate-eyebrow">
-                  {t('Scan voltooid')} —{" "}
-                  {scanPath === "pain"
-                    ? t("Pijn & Prestatie Analyse")
-                    : scanPath === "fysio"
-                    ? t("Fysio Intake")
-                    : t("Performance Profiel")}
+              {/* Progressiebalk loopt door op de gate — "bijna klaar"-effect */}
+              <div className="progress-wrap gate-progress">
+                <div className="progress-top">
+                  <span
+                    className="progress-label"
+                    style={{ color: "var(--accent)", fontWeight: 700 }}
+                  >
+                    {gateStep === 0 ? t('Bijna klaar') : t('Laatste stap')}
+                  </span>
+                  <span className="progress-label">
+                    {scanPath === "pain"
+                      ? t("Pijn & Prestatie Scan")
+                      : scanPath === "fysio"
+                      ? t("Fysio Intake")
+                      : t("Performance Scan")}
+                  </span>
                 </div>
-                <div className="gate-title">
-                  {scanPath === "pain" ? (
-                    <>
-                      {t('Je rapport is klaar.')}
-                      <br />
-                      {t('Waar moeten we het naartoe sturen?')}
-                    </>
-                  ) : scanPath === "fysio" ? (
-                    <>
-                      {t('Je herstelprofiel is klaar.')}
-                      <br />
-                      {t("Waar sturen we 'm heen?")}
-                    </>
-                  ) : (
-                    <>
-                      {t('Je Performance Profiel is klaar.')}
-                      <br />
-                      {t("Waar sturen we 'm heen?")}
-                    </>
-                  )}
+                <div className="progress-bar">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${((totalSteps + (gateStep + 1) / 3) / (totalSteps + 1)) * 100}%`,
+                    }}
+                  />
                 </div>
-                <div className="gate-sub">
-                  {scanPath === "pain"
-                    ? t('Vul je gegevens in om je persoonlijke bewegingsanalyse en 7-daags correctief plan direct via e-mail te ontvangen.')
-                    : scanPath === "fysio"
-                    ? t('Vul je gegevens in en zie direct je herstelprofiel én je opbouwplan. Je coach plant daarna je intake in.')
-                    : t('Vul je gegevens in en zie direct je bewegingsprofiel én je persoonlijke krachtplan — meteen te starten in de app.')}
-                </div>
+              </div>
 
-                {error && (
-                  <div className="gate-error">
-                    ⚠ {error} — {t('probeer het opnieuw')}
-                  </div>
+              <div className="gate-box" key={gateStep}>
+                {/* ── GATE-STAP 1: VOORNAAM ── */}
+                {gateStep === 0 && (
+                  <>
+                    <div className="gate-eyebrow">
+                      {t('Scan voltooid')} —{" "}
+                      {scanPath === "pain"
+                        ? t("Pijn & Prestatie Analyse")
+                        : scanPath === "fysio"
+                        ? t("Fysio Intake")
+                        : t("Performance Profiel")}
+                    </div>
+                    <div className="gate-title">
+                      {scanPath === "pain"
+                        ? t('Je rapport is klaar.')
+                        : scanPath === "fysio"
+                        ? t('Je herstelprofiel is klaar.')
+                        : t('Je Performance Profiel is klaar.')}
+                      <br />
+                      {t('Voor wie mogen we het klaarzetten?')}
+                    </div>
+
+                    {scanPath === "pain" ? (
+                      <div className="gate-preview">
+                        <div className="preview-pill">
+                          {t('Bewegingsbeperkingen: geïdentificeerd')}
+                        </div>
+                        <div className="preview-pill">
+                          {t('Risico Niveau: geanalyseerd')}
+                        </div>
+                        <div className="preview-pill">
+                          {t('7-Daags Plan: gegenereerd')}
+                        </div>
+                        <div className="preview-pill">
+                          {t('Expert Beoordeling: gereed')}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="gate-preview">
+                        <div className="preview-pill">
+                          {t('Bewegingsprofiel: geanalyseerd')}
+                        </div>
+                        <div className="preview-pill">
+                          {t('Sterke punten + groeikans: in kaart')}
+                        </div>
+                        <div className="preview-pill">
+                          {t(scanPath === "fysio" ? 'Opbouwplan: gegenereerd' : 'Krachtplan: gegenereerd')}
+                        </div>
+                        <div className="preview-pill">
+                          {t('2 weken app: klaar')}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="field-wrap">
+                      <label className="field-label">{t('Voornaam')}</label>
+                      <input
+                        className="field-input"
+                        type="text"
+                        autoFocus
+                        placeholder={t('Jan')}
+                        value={userInfo.name}
+                        onChange={(e) =>
+                          setUserInfo((p) => ({ ...p, name: e.target.value }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && userInfo.name.trim()) setGateStep(1);
+                        }}
+                      />
+                    </div>
+
+                    <button
+                      className="submit-btn"
+                      onClick={() => setGateStep(1)}
+                      disabled={!userInfo.name.trim()}
+                    >
+                      {t('Volgende →')}
+                    </button>
+                  </>
                 )}
 
-                {scanPath === "pain" ? (
-                  <div className="gate-preview">
-                    <div className="preview-pill">
-                      {t('Bewegingsbeperkingen: geïdentificeerd')}
+                {/* ── GATE-STAP 2: E-MAIL ── */}
+                {gateStep === 1 && (
+                  <>
+                    <div className="gate-eyebrow">{t('Laatste stap')}</div>
+                    <div className="gate-title">
+                      {userInfo.name.trim() && (
+                        <>
+                          {t('Top')}, {userInfo.name.trim().split(/\s+/)[0]}.
+                          <br />
+                        </>
+                      )}
+                      {scanPath === "pain"
+                        ? t('Waar mogen we je rapport naartoe sturen?')
+                        : t('Waar mogen we je profiel + plan naartoe sturen?')}
                     </div>
-                    <div className="preview-pill">
-                      {t('Risico Niveau: geanalyseerd')}
+                    <div className="gate-sub">
+                      {scanPath === "pain"
+                        ? t('Je persoonlijke bewegingsanalyse en 7-daags correctief plan, direct via e-mail.')
+                        : scanPath === "fysio"
+                        ? t('Vul je gegevens in en zie direct je herstelprofiel én je opbouwplan. Je coach plant daarna je intake in.')
+                        : t('Vul je gegevens in en zie direct je bewegingsprofiel én je persoonlijke krachtplan — meteen te starten in de app.')}
                     </div>
-                    <div className="preview-pill">
-                      {t('7-Daags Plan: gegenereerd')}
+
+                    <div className="field-wrap">
+                      <label className="field-label">{t('E-mailadres')}</label>
+                      <input
+                        className="field-input"
+                        type="email"
+                        autoFocus
+                        placeholder={t('jan@voorbeeld.nl')}
+                        value={userInfo.email}
+                        onChange={(e) =>
+                          setUserInfo((p) => ({ ...p, email: e.target.value }))
+                        }
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && isValidEmail(userInfo.email)) setGateStep(2);
+                        }}
+                      />
+                      {userInfo.email &&
+                        userInfo.email.includes("@") &&
+                        !isValidEmail(userInfo.email) && (
+                          <div
+                            style={{
+                              fontSize: "10px",
+                              color: "#ff6b6b",
+                              marginTop: "6px",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            {t('Check je emailadres — dit lijkt niet geldig')}
+                          </div>
+                        )}
                     </div>
-                    <div className="preview-pill">
-                      {t('Expert Beoordeling: gereed')}
+
+                    <button
+                      className="submit-btn"
+                      onClick={() => setGateStep(2)}
+                      disabled={!isValidEmail(userInfo.email)}
+                    >
+                      {t('Volgende →')}
+                    </button>
+                    <div className="submit-note">
+                      {scanPath === "pain"
+                        ? t('Je resultaten worden direct gemaild · Geen spam, ooit')
+                        : t('Je profiel + plan staan meteen klaar · Geen spam, ooit')}
                     </div>
-                  </div>
-                ) : (
-                  <div className="gate-preview">
-                    <div className="preview-pill">
-                      {t('Bewegingsprofiel: geanalyseerd')}
-                    </div>
-                    <div className="preview-pill">
-                      {t('Sterke punten + groeikans: in kaart')}
-                    </div>
-                    <div className="preview-pill">
-                      {t(scanPath === "fysio" ? 'Opbouwplan: gegenereerd' : 'Krachtplan: gegenereerd')}
-                    </div>
-                    <div className="preview-pill">
-                      {t('2 weken app: klaar')}
-                    </div>
-                  </div>
+                    <button className="gate-back" onClick={() => setGateStep(0)}>
+                      {t('← Terug')}
+                    </button>
+                  </>
                 )}
 
-                <div className="gate-fields">
-                  <div className="field-wrap">
-                    <label className="field-label">{t('Voornaam')}</label>
-                    <input
-                      className="field-input"
-                      type="text"
-                      placeholder={t('Jan')}
-                      value={userInfo.name}
-                      onChange={(e) =>
-                        setUserInfo((p) => ({ ...p, name: e.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="field-wrap">
-                    <label className="field-label">{t('E-mailadres')}</label>
-                    <input
-                      className="field-input"
-                      type="email"
-                      placeholder={t('jan@voorbeeld.nl')}
-                      value={userInfo.email}
-                      onChange={(e) =>
-                        setUserInfo((p) => ({ ...p, email: e.target.value }))
-                      }
-                    />
-                    {userInfo.email &&
-                      userInfo.email.includes("@") &&
-                      !isValidEmail(userInfo.email) && (
+                {/* ── GATE-STAP 3: TELEFOON (OPTIONEEL) ── */}
+                {gateStep === 2 && (
+                  <>
+                    <div className="gate-eyebrow">{t('Laatste stap — optioneel')}</div>
+                    <div className="gate-title">
+                      {t('Wil je dat je coach even met je meekijkt?')}
+                    </div>
+                    <div className="gate-sub">
+                      {t('Laat je (WhatsApp-)nummer achter zodat je coach je snel kan bereiken. Liever niet? Sla deze stap gewoon over.')}
+                    </div>
+
+                    {error && (
+                      <div className="gate-error">
+                        ⚠ {error} — {t('probeer het opnieuw')}
+                      </div>
+                    )}
+
+                    <div className="field-wrap">
+                      <label className="field-label">{t('Telefoonnummer (optioneel)')}</label>
+                      <input
+                        className="field-input"
+                        type="tel"
+                        autoFocus
+                        placeholder={t('Bijv. 06 12 34 56 78')}
+                        value={userInfo.phone}
+                        onChange={(e) =>
+                          setUserInfo((p) => ({ ...p, phone: e.target.value }))
+                        }
+                        onKeyDown={(e) => {
+                          if (
+                            e.key === "Enter" &&
+                            !submitting &&
+                            userInfo.name &&
+                            isValidEmail(userInfo.email)
+                          )
+                            handleGateSubmit();
+                        }}
+                      />
+                      {userInfo.phone && !isValidPhone(userInfo.phone) && (
                         <div
                           style={{
                             fontSize: "10px",
@@ -2101,81 +2226,64 @@ export default function App() {
                             letterSpacing: "0.5px",
                           }}
                         >
-                          {t('Check je emailadres — dit lijkt niet geldig')}
+                          {t('Check je telefoonnummer')}
                         </div>
                       )}
-                  </div>
-                </div>
+                    </div>
 
-                <div className="field-wrap" style={{ marginTop: "12px" }}>
-                  <label className="field-label">{t('Telefoonnummer (optioneel)')}</label>
-                  <input
-                    className="field-input"
-                    type="tel"
-                    placeholder={t('Bijv. 06 12 34 56 78')}
-                    value={userInfo.phone}
-                    onChange={(e) =>
-                      setUserInfo((p) => ({ ...p, phone: e.target.value }))
-                    }
-                  />
-                  <div
-                    style={{
-                      fontSize: "10px",
-                      color:
-                        userInfo.phone && !isValidPhone(userInfo.phone)
-                          ? "#ff6b6b"
-                          : "#71717a",
-                      marginTop: "6px",
-                      letterSpacing: "0.5px",
-                    }}
-                  >
-                    {userInfo.phone && !isValidPhone(userInfo.phone)
-                      ? t('Check je telefoonnummer')
-                      : t('Laat je (WhatsApp-)nummer achter zodat je coach je snel kan bereiken.')}
-                  </div>
-                </div>
+                    {scanPath === "fysio" && (
+                      <div className="field-wrap" style={{ marginBottom: "18px" }}>
+                        <label className="field-label">
+                          {t('Naam fysiotherapeut / praktijk (optioneel)')}
+                        </label>
+                        <input
+                          className="field-input"
+                          type="text"
+                          placeholder={t('Bijv. FysioFit Amsterdam')}
+                          value={data.referralSource || ""}
+                          onChange={(e) =>
+                            setData((d) => ({
+                              ...d,
+                              referralSource: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    )}
 
-                {scanPath === "fysio" && (
-                  <div className="field-wrap" style={{ marginBottom: "18px" }}>
-                    <label className="field-label">
-                      {t('Naam fysiotherapeut / praktijk (optioneel)')}
-                    </label>
-                    <input
-                      className="field-input"
-                      type="text"
-                      placeholder={t('Bijv. FysioFit Amsterdam')}
-                      value={data.referralSource || ""}
-                      onChange={(e) =>
-                        setData((d) => ({
-                          ...d,
-                          referralSource: e.target.value,
-                        }))
+                    <button
+                      className="submit-btn"
+                      onClick={handleGateSubmit}
+                      disabled={
+                        !userInfo.name ||
+                        !userInfo.email ||
+                        !isValidEmail(userInfo.email) ||
+                        submitting
                       }
-                    />
-                  </div>
+                    >
+                      {submitting
+                        ? t('Bezig met versturen…')
+                        : scanPath === "pain"
+                        ? t('Analyseer Mijn Beweging →')
+                        : t('Toon Mijn Profiel →')}
+                    </button>
+                    {!submitting && !userInfo.phone && (
+                      <button className="gate-skip" onClick={handleGateSubmit}>
+                        {scanPath === "pain"
+                          ? t('Overslaan en mijn rapport bekijken →')
+                          : t('Overslaan en mijn profiel bekijken →')}
+                      </button>
+                    )}
+                    <div className="submit-note">
+                      {scanPath === "pain"
+                        ? t('Je resultaten worden direct gemaild · Geen spam, ooit')
+                        : t('Je profiel + plan staan meteen klaar · Geen spam, ooit')}
+                    </div>
+                    <button className="gate-back" onClick={() => setGateStep(1)}>
+                      {t('← Terug')}
+                    </button>
+                  </>
                 )}
-
-                <button
-                  className="submit-btn"
-                  onClick={handleGateSubmit}
-                  disabled={
-                    !userInfo.name ||
-                    !userInfo.email ||
-                    !isValidEmail(userInfo.email) ||
-                    submitting
-                  }
-                >
-                  {submitting
-                    ? t('Bezig met versturen…')
-                    : scanPath === "pain"
-                    ? t('Analyseer Mijn Beweging →')
-                    : t('Toon Mijn Profiel →')}
-                </button>
-                <div className="submit-note">
-                  {scanPath === "pain"
-                    ? t('Je resultaten worden direct gemaild · Geen spam, ooit')
-                    : t('Je profiel + plan staan meteen klaar · Geen spam, ooit')}
-                </div>
               </div>
             </div>
           )}
