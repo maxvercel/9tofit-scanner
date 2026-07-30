@@ -93,6 +93,9 @@ const EMAIL_TRANSLATIONS = {
   'Start met trainen zodra je schema klaarstaat in de app': {
     en: 'Start training as soon as your program is ready in the app',
   },
+  'Coach Max kijkt mee en verfijnt je schema terwijl je traint': {
+    en: 'Coach Max keeps an eye on your program and fine-tunes it while you train',
+  },
   'Na pakketkeuze': { en: 'After plan selection' },
   'Volgende stap': { en: 'Next step' },
   'Coach intake': { en: 'Coach intake' },
@@ -808,7 +811,7 @@ async function sendIntakeEmails({ name, email, fromEmail, coachEmail, scanPath, 
           </td></tr>
           <tr><td style="padding:0;">
             <span style="font-size:10px;font-weight:700;color:${accentColor};font-family:'Courier New',monospace;vertical-align:top;">03</span>
-            <span style="font-size:13px;color:#e4e4e7;margin-left:12px;">${tt('Start met trainen zodra je schema klaarstaat in de app')}</span>
+            <span style="font-size:13px;color:#e4e4e7;margin-left:12px;">${isFysio ? tt('Start met trainen zodra je schema klaarstaat in de app') : tt('Coach Max kijkt mee en verfijnt je schema terwijl je traint')}</span>
           </td></tr>
         </table>
       </td></tr>

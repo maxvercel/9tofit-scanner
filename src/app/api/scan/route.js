@@ -91,7 +91,7 @@ export async function POST(request) {
 
     const langInstruction = isEn
       ? `IMPORTANT: All text output must be in English.`
-      : `BELANGRIJK: ALLE tekst moet in het Nederlands zijn — óók alle namen, titels en labels (bewegingsbeperkingen, oefeningen, dag-titels, risicofactoren). Gebruik GEEN Engelse (vak)termen; vertaal alles naar natuurlijk Nederlands. Bijvoorbeeld: 'Zit-naar-sta-controle' i.p.v. 'Sit-to-Stand', 'Langdurig zitten' i.p.v. 'Prolonged Sitting', 'Voorwaartse kophouding' i.p.v. 'Forward Head Posture'. Schrijf 'nek' (nooit 'neck') en 'rug' (nooit 'back').`;
+      : `BELANGRIJK: ALLE tekst moet in het Nederlands zijn — óók alle namen, titels en labels (bewegingsbeperkingen, oefeningen, dag-titels, risicofactoren). Gebruik GEEN Engelse (vak)termen; vertaal alles naar natuurlijk Nederlands. Bijvoorbeeld: 'Zit-naar-sta-controle' i.p.v. 'Sit-to-Stand', 'Langdurig zitten' i.p.v. 'Prolonged Sitting', 'Voorwaartse kophouding' i.p.v. 'Forward Head Posture'. Schrijf 'nek' (nooit 'neck') en 'rug' (nooit 'back'). Verzin GEEN mengwoorden of halfvertalingen: het is 'nekpijn' (nooit 'neckpijn'), 'nekspieren' (nooit 'neckflexors'), 'bewegingscontrole' (nooit 'Bewegingskontrolle'), 'herstel van beweging' (nooit 'Movimento-hereducatie'). Gebruik ook geen Duitse, Italiaanse of andere niet-Nederlandse woorden. Controleer je volledige output vóór je antwoordt: elk woord moet correct Nederlands zijn.`;
     const langSuffix = isEn ? '- IN ENGLISH' : '- IN DUTCH';
     const riskLabels = isEn ? 'Low | Moderate | High' : 'Laag | Gemiddeld | Hoog';
     const urgencyExamples = isEn
@@ -181,7 +181,7 @@ Rules for risk assessment:
 - Functional limitations (movements not pain-free): ${JSON.stringify(answers.functional_limitations)}
 - Work type: ${answers.work_type}
 - Training history: ${answers.training_history}
-- Activity level: ${answers.activity_level} days/week
+- Days AVAILABLE for training: ${answers.activity_level} days/week (this is availability, NOT current training frequency — see "Training history" for whether this person currently trains at all; never claim they "train X times per week")
 - Previous treatment: ${JSON.stringify(answers.previous_treatment)}
 
 Generate a comprehensive movement analysis and 7-day corrective plan.`;

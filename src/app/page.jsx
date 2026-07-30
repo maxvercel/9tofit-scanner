@@ -738,6 +738,10 @@ export default function App() {
 
   const steps = getSteps();
   const leadTier = computeLeadTier(data, painData, scanPath).tier;
+  // "Je gaf aan er nu mee aan de slag te willen" + WhatsApp-belofte alleen
+  // tonen als de bezoeker dat ook écht aangaf (intent = nu een coach). Een
+  // lead kan ook hot worden door klacht/leeftijd — dan geen valse claim.
+  const hotContact = leadTier === "hot" && data.intent === "coach_now";
   const totalSteps = steps.length;
   const currentStepId = steps[step];
   // De 3 contactstappen (naam, e-mail, telefoon) tellen mee als echte stappen,
@@ -2453,7 +2457,7 @@ export default function App() {
                 {t('Je bewegingsprofiel analyseren…')}
               </div>
               <div className="analyzing-sub">
-                {t('Je persoonlijke rapport opbouwen — dit duurt ongeveer 20–30 seconden')}
+                {t('Je persoonlijke rapport opbouwen — dit kan tot een minuut duren')}
               </div>
               <div className="analyzing-steps">
                 {ANALYZE_STEPS.map((s, i) => (
@@ -2676,20 +2680,20 @@ export default function App() {
                       {leadTier === "cold" ? t('Geen haast — wanneer jij er klaar voor bent') : t('Aanbevolen volgende stap')}
                     </div>
                     <div className="call-title">
-                      {leadTier === "hot" ? t('Je coach neemt contact op') : leadTier === "cold" ? t('Sparren kan — geheel vrijblijvend') : t('Boek een Gratis Strategiegesprek')}
+                      {hotContact ? t('Je coach neemt contact op') : leadTier === "cold" ? t('Sparren kan — geheel vrijblijvend') : t('Boek een Gratis Strategiegesprek')}
                     </div>
                     <div className="call-desc">
-                      {leadTier === "hot" ? t('Je gaf aan er nu mee aan de slag te willen. Je coach Max neemt binnenkort via WhatsApp contact op om samen een plan te maken — of stuur zelf even een appje.') : leadTier === "cold" ? t('Je rapport staat hierboven, neem er rustig de tijd voor. Wil je later toch sparren, dan staat een gratis gesprek altijd open.') : t('Op basis van jouw profiel zou een 30-minuten sessie met Max je een precieze diagnose geven en een versnellingsprotocol gericht op jouw lichaam en leefstijl.')}
+                      {hotContact ? t('Je gaf aan er nu mee aan de slag te willen. Je coach Max neemt binnenkort via WhatsApp contact op om samen een plan te maken — of stuur zelf even een appje.') : leadTier === "cold" ? t('Je rapport staat hierboven, neem er rustig de tijd voor. Wil je later toch sparren, dan staat een gratis gesprek altijd open.') : t('Op basis van jouw profiel zou een 30-minuten sessie met Max je een precieze diagnose geven en een versnellingsprotocol gericht op jouw lichaam en leefstijl.')}
                     </div>
                   </div>
                   <a
-                    href={leadTier === "hot" ? WHATSAPP_URL : CALENDLY_URL}
-                    onClick={leadTier === "hot" ? undefined : (e) => { e.preventDefault(); openCalendly(); }}
+                    href={hotContact ? WHATSAPP_URL : CALENDLY_URL}
+                    onClick={hotContact ? undefined : (e) => { e.preventDefault(); openCalendly(); }}
                     className="call-btn"
-                    target={leadTier === "hot" ? "_blank" : undefined}
-                    rel={leadTier === "hot" ? "noopener noreferrer" : undefined}
+                    target={hotContact ? "_blank" : undefined}
+                    rel={hotContact ? "noopener noreferrer" : undefined}
                   >
-                    {leadTier === "hot" ? t('App je coach op WhatsApp →') : leadTier === "cold" ? t('Plan vrijblijvend gesprek →') : t('Boek Gratis Gesprek →')}
+                    {hotContact ? t('App je coach op WhatsApp →') : leadTier === "cold" ? t('Plan vrijblijvend gesprek →') : t('Boek Gratis Gesprek →')}
                   </a>
                 </div>
               )}
@@ -2720,7 +2724,7 @@ export default function App() {
               <div className="success-sub">
                 {scanPath === "fysio"
                   ? t('Je coach Max ontvangt nu je volledige profiel en neemt zo snel mogelijk contact met je op om je programma te bespreken.')
-                  : (leadTier === "hot" ? t('Je persoonlijke plan staat klaar in de app. Omdat je er nu mee aan de slag wilt, neemt coach Max persoonlijk via WhatsApp contact op — of stuur zelf even een appje.') : leadTier === "cold" ? t('Je persoonlijke plan staat klaar in de app — begin wanneer jij wilt. Geen druk; je coach denkt vrijblijvend mee als je daar behoefte aan hebt.') : t('Je persoonlijke plan staat klaar in de app. Je coach Max kijkt mee en verfijnt het op maat.'))}
+                  : (hotContact ? t('Je persoonlijke plan staat klaar in de app. Omdat je er nu mee aan de slag wilt, neemt coach Max persoonlijk via WhatsApp contact op — of stuur zelf even een appje.') : leadTier === "cold" ? t('Je persoonlijke plan staat klaar in de app — begin wanneer jij wilt. Geen druk; je coach denkt vrijblijvend mee als je daar behoefte aan hebt.') : t('Je persoonlijke plan staat klaar in de app. Je coach Max kijkt mee en verfijnt het op maat.'))}
               </div>
               {profile && (
                 <div className="profile-card">
@@ -2775,14 +2779,14 @@ export default function App() {
                 </div>
               </div>
               <a
-                href={leadTier === "hot" ? WHATSAPP_URL : CALENDLY_URL}
-                onClick={leadTier === "hot" ? undefined : (e) => { e.preventDefault(); openCalendly(); }}
+                href={hotContact ? WHATSAPP_URL : CALENDLY_URL}
+                onClick={hotContact ? undefined : (e) => { e.preventDefault(); openCalendly(); }}
                 className="call-btn"
-                    target={leadTier === "hot" ? "_blank" : undefined}
-                    rel={leadTier === "hot" ? "noopener noreferrer" : undefined}
+                    target={hotContact ? "_blank" : undefined}
+                    rel={hotContact ? "noopener noreferrer" : undefined}
                 style={{ margin: "0 auto", display: "inline-flex" }}
               >
-                {leadTier === "hot" ? t('App je coach op WhatsApp →') : leadTier === "cold" ? t('Later een gesprek plannen') : t('Plan een Kennismakingsgesprek →')}
+                {hotContact ? t('App je coach op WhatsApp →') : leadTier === "cold" ? t('Later een gesprek plannen') : t('Plan een Kennismakingsgesprek →')}
               </a>
               <div style={{ marginTop: "20px" }}>
                 <button className="restart-btn" onClick={reset}>

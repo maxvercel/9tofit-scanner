@@ -104,7 +104,7 @@ const dict = {
   'Bijv. 06 12 34 56 78': { en: 'E.g. 06 12 34 56 78' },
   'Check je telefoonnummer': { en: 'Check your phone number' },
   'Laat je (WhatsApp-)nummer achter zodat je coach je snel kan bereiken.': { en: 'Leave your (WhatsApp) number so your coach can reach you quickly.' },
-  'Je persoonlijke rapport opbouwen — dit duurt ongeveer 20–30 seconden': { en: 'Building your personal report — this takes about 20–30 seconds' },
+  'Je persoonlijke rapport opbouwen — dit kan tot een minuut duren': { en: 'Building your personal report — this can take up to a minute' },
   'Geen haast — wanneer jij er klaar voor bent': { en: "No rush — whenever you're ready" },
   'Je coach neemt contact op': { en: 'Your coach will get in touch' },
   'Sparren kan — geheel vrijblijvend': { en: 'Happy to talk — no obligation' },
