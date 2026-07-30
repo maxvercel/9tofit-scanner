@@ -579,16 +579,18 @@ export default function App() {
   const [hook, setHook] = useState("");
 
   // Shared data (all paths)
+  // Geen voorgeselecteerde defaults (werkuren/trainingsdagen/pijnschaal):
+  // elke waarde is een bewuste keuze — schonere data, geen doorklik-ruis.
   const [data, setData] = useState({
     ageRange: "",
     trainingBackground: "",
     goals: [],
     yearGoalText: "",
     workSituation: "",
-    workHoursPerWeek: "40",
+    workHoursPerWeek: "",
     hasChildren: null,
     childrenCount: 0,
-    trainingDaysAvailable: 3,
+    trainingDaysAvailable: 0,
     startUrgency: "",
     intent: "",
     referralSource: "",
@@ -597,7 +599,7 @@ export default function App() {
   // Pain-specific data
   const [painData, setPainData] = useState({
     painLocations: [],
-    painIntensity: 5,
+    painIntensity: 0,
     painDuration: "",
     painTiming: "",
     painTriggers: [],
@@ -1221,8 +1223,8 @@ export default function App() {
     setStep(0);
     setScanPath("");
     // Bewaar UTM zodat een 2e scan in dezelfde sessie z'n kanaal-attributie houdt.
-    setData((prev) => ({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "40", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 3, startUrgency: "", intent: "", referralSource: "", utm: prev.utm }));
-    setPainData({ painLocations: [], painIntensity: 5, painDuration: "", painTiming: "", painTriggers: [], painOnset: "", painEasers: [], painRedFlags: [], painFunction: [] });
+    setData((prev) => ({ ageRange: "", trainingBackground: "", goals: [], yearGoalText: "", workSituation: "", workHoursPerWeek: "", hasChildren: null, childrenCount: 0, trainingDaysAvailable: 0, startUrgency: "", intent: "", referralSource: "", utm: prev.utm }));
+    setPainData({ painLocations: [], painIntensity: 0, painDuration: "", painTiming: "", painTriggers: [], painOnset: "", painEasers: [], painRedFlags: [], painFunction: [] });
     setUserInfo({ name: "", email: "", phone: "" });
     setGateStep(0);
     setResult(null);
