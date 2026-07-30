@@ -31,6 +31,69 @@ const REQUIRED_FIELDS = [
   'training_history', 'activity_level'
 ]
 
+// ── Taalkwaliteit-vangnet ──────────────────────────────
+// Ondanks strikte prompt-instructies bleef het AI-model (herhaaldelijk,
+// over meerdere test-rondes) losse Engelse/Duitse woorden, halfvertaalde
+// mengwoorden, dubbele woorddelen en inconsistente aanspreekvorm (u/je)
+// in het rapport zetten. Dit is een deterministisch vangnet dat draait
+// NA de AI-call, zodat een gemiste instructie nooit meer bij de gebruiker
+// terechtkomt — los van hoe goed het model die keer heeft geluisterd.
+const BAD_TERM_MAP = [
+  [/\bneckpijn\b/gi, 'nekpijn'],
+  [/\bneck ?flexors?\b/gi, 'nekspieren'],
+  [/\bneck ?stabilizers?\b/gi, 'nekstabilisatoren'],
+  [/\bside[- ]?lying\b/gi, 'zijligging'],
+  [/\bBewegingskontrolle\b/gi, 'bewegingscontrole'],
+  [/\bMovimento[- ]?hereducati\w*\b/gi, 'bewegingsherprogrammering'],
+  [/\bWichtig\b/gi, 'Belangrijk'],
+  [/\bContinue\b/gi, 'Doorzetten'],
+  [/\bintroduct(ion|ory|ive)\w*\b/gi, 'kennismaking'],
+  [/\btraining ?habits?\b/gi, 'trainingsgewoontes'],
+  [/\bschoudergarnituur\b/gi, 'schoudergordel'],
+  [/\b(D|d)e goeie nieuws\b/g, (_, d) => (d === 'D' ? 'Het' : 'het') + ' goede nieuws'],
+  [/\bgoeie\b/gi, 'goede'],
+  [/\bneck\b/gi, 'nek'],
+  [/\bback\b/gi, 'rug'],
+]
+
+// Vangt portmanteau-bugs zoals "zithoudinghouding" -> "zithouding":
+// een woorddeel van 6+ tekens dat direct op zichzelf herhaalt.
+function collapseDuplicateWordFragments(str) {
+  return str.replace(/([a-zA-Zà-ÿ]{6,})\1/gi, '$1')
+}
+
+// 9toFit spreekt gebruikers altijd informeel aan ("je/jij/jouw"),
+// nooit met "u/uw" — los van wat het model die keer koos.
+function enforceInformalTone(str) {
+  return str
+    .replace(/\bUw\b/g, 'Jouw')
+    .replace(/\buw\b/g, 'jouw')
+    .replace(/\bU\b/g, 'Je')
+    .replace(/\bu\b/g, 'je')
+}
+
+function sanitizeReportText(str) {
+  if (typeof str !== 'string') return str
+  let out = str
+  for (const [pattern, replacement] of BAD_TERM_MAP) {
+    out = out.replace(pattern, replacement)
+  }
+  out = collapseDuplicateWordFragments(out)
+  out = enforceInformalTone(out)
+  return out
+}
+
+function deepSanitize(value) {
+  if (typeof value === 'string') return sanitizeReportText(value)
+  if (Array.isArray(value)) return value.map(deepSanitize)
+  if (value && typeof value === 'object') {
+    const result = {}
+    for (const key of Object.keys(value)) result[key] = deepSanitize(value[key])
+    return result
+  }
+  return value
+}
+
 export async function POST(request) {
   try {
     // ── Rate limiting ───
@@ -91,20 +154,23 @@ export async function POST(request) {
 
     const langInstruction = isEn
       ? `IMPORTANT: All text output must be in English.`
-      : `BELANGRIJK: ALLE tekst moet in het Nederlands zijn — óók alle namen, titels en labels (bewegingsbeperkingen, oefeningen, dag-titels, risicofactoren). Gebruik GEEN Engelse (vak)termen; vertaal alles naar natuurlijk Nederlands. Bijvoorbeeld: 'Zit-naar-sta-controle' i.p.v. 'Sit-to-Stand', 'Langdurig zitten' i.p.v. 'Prolonged Sitting', 'Voorwaartse kophouding' i.p.v. 'Forward Head Posture'. Schrijf 'nek' (nooit 'neck') en 'rug' (nooit 'back'). Verzin GEEN mengwoorden of halfvertalingen: het is 'nekpijn' (nooit 'neckpijn'), 'nekspieren' (nooit 'neckflexors'), 'bewegingscontrole' (nooit 'Bewegingskontrolle'), 'herstel van beweging' (nooit 'Movimento-hereducatie'). Gebruik ook geen Duitse, Italiaanse of andere niet-Nederlandse woorden. Controleer je volledige output vóór je antwoordt: elk woord moet correct Nederlands zijn.`;
-    const langSuffix = isEn ? '- IN ENGLISH' : '- IN DUTCH';
+      : `BELANGRIJK — TAALREGELS (in volgorde van prioriteit):
+1. ALLE tekst moet in het Nederlands zijn — óók alle namen, titels en labels (bewegingsbeperkingen, oefeningen, dag-titels, risicofactoren). Geen enkele string mag een Engels, Duits, Italiaans of ander niet-Nederlands woord bevatten.
+2. Vertaal vakjargon naar natuurlijk Nederlands, bijvoorbeeld: 'Zit-naar-sta-controle' i.p.v. 'Sit-to-Stand', 'Langdurig zitten' i.p.v. 'Prolonged Sitting', 'Voorwaartse kophouding' i.p.v. 'Forward Head Posture', 'Zijligging' i.p.v. 'Sidelying', 'Nekstabilisatoren' i.p.v. 'Neck stabilizers'.
+3. Schrijf 'nek' (nooit 'neck') en 'rug' (nooit 'back'). Verzin GEEN mengwoorden of halfvertalingen: 'nekpijn' (nooit 'neckpijn'), 'nekspieren' (nooit 'neckflexors'), 'bewegingscontrole' (nooit 'Bewegingskontrolle'), 'herstel van beweging' (nooit 'Movimento-hereducatie').
+4. Spreek de lezer ALTIJD informeel aan: gebruik 'je', 'jij', 'jouw'. Gebruik NOOIT 'u' of 'uw' — ook niet in de expert-quote of coach_insight. Wees hierin consistent door de HELE output heen.
+5. Gebruik correcte, standaard Nederlandse grammatica en spelling (juiste lidwoorden 'de'/'het', correcte werkwoordsvormen). Geen spreektaal-verkortingen zoals 'goeie' (schrijf 'goede'), 'idd', 'ff'.
+6. Geen dubbele of samengeklonterde woorddelen (bv. NIET 'zithoudinghouding' — gewoon 'zithouding').
+7. ZELFCONTROLE VERPLICHT: lees vlak voordat je antwoordt elke string in je JSON nog één keer na tegen bovenstaande 6 regels en herschrijf wat niet klopt. Dit is de belangrijkste stap.`;
+    const langSuffix = isEn ? '- IN ENGLISH' : '- IN DUTCH, informal "je/jij/jouw", never "u/uw"';
     const riskLabels = isEn ? 'Low | Moderate | High' : 'Laag | Gemiddeld | Hoog';
     const urgencyExamples = isEn
       ? `Short urgency label in English e.g. 'Needs attention' or 'Monitor closely' or 'Address now'`
       : `Short urgency label in Dutch e.g. 'Aandacht nodig' or 'Goed monitoren' or 'Nu aanpakken'`;
-    const dayTitleExample = isEn
-      ? `Foundation & Assessment`
-      : `Foundation & Assessment (TRANSLATE TO DUTCH - e.g. 'Fundament & Beoordeling')`;
-    const focusExample = isEn
-      ? `Mobility`
-      : `Mobility (TRANSLATE TO DUTCH - e.g. 'Mobiliteit')`;
-    const insightLang = isEn ? 'in English' : 'in Dutch';
-    const titleNote = isEn ? 'ALL DAY TITLES, EXERCISE NAMES, AND NOTES MUST BE IN ENGLISH' : 'ALL DAY TITLES, EXERCISE NAMES, AND NOTES MUST BE IN DUTCH';
+    const dayTitleExample = isEn ? `Foundation & Assessment` : `Fundament & Beoordeling`;
+    const focusExample = isEn ? `Mobility` : `Mobiliteit`;
+    const insightLang = isEn ? 'in English' : 'in Dutch, informal "je/jij/jouw", never "u/uw"';
+    const titleNote = isEn ? 'ALL DAY TITLES, EXERCISE NAMES, AND NOTES MUST BE IN ENGLISH' : 'ALL DAY TITLES, EXERCISE NAMES, AND NOTES MUST BE IN DUTCH, addressed informally ("je"), never "u/uw"';
 
     const systemPrompt = `You are Max, a specialist in injury rehabilitation and movement correction at 9toFit. You work with busy men (30–55) who have pain affecting their training and daily life.
 
@@ -151,7 +217,7 @@ Return this exact structure:
   ]
 }
 
-Rules for the 7-day plan:
+Rules for the 7-day plan (these phase descriptions are internal planning guidance for YOU, the assistant — they describe the training concept for each phase, they are NOT text to copy into the JSON output; every "title", "focus" and "note" you write must be an original ${isEn ? 'English' : 'Dutch'} phrase, never a translation-by-echo of these English words):
 - Day 1-2: Gentle mobility and pain reduction
 - Day 3-4: Stability and activation
 - Day 5-6: Strength and movement re-education
@@ -194,7 +260,10 @@ Generate a comprehensive movement analysis and 7-day corrective plan.`;
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        // Haiku kept producing mixed-language/formality errors despite strict
+        // prompt instructions across multiple test rounds — Sonnet follows the
+        // Dutch-language rules far more reliably for this report-writing task.
+        model: 'claude-sonnet-4-5-20250929',
         max_tokens: 8000,
         messages: [{ role: 'user', content: systemPrompt + '\n\n' + userMessage }]
       })
@@ -220,8 +289,11 @@ Generate a comprehensive movement analysis and 7-day corrective plan.`;
       );
     }
     const parsed = JSON.parse(jsonMatch[0]);
+    // Deterministic language-quality safety net (see BAD_TERM_MAP above) —
+    // only applied for Dutch output, so English "back"/"continue"/etc. stay intact.
+    const cleaned = isEn ? parsed : deepSanitize(parsed);
 
-    return Response.json({ success: true, result: parsed });
+    return Response.json({ success: true, result: cleaned });
 
   } catch (error) {
     console.error('Scan error:', error);
