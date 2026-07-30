@@ -28,6 +28,9 @@ const EMAIL_TRANSLATIONS = {
   'Bekijk hieronder jouw bewegingsbeperkingen, risicofactoren en het 7-daagse correctieplan.': {
     en: 'See your movement limitations, risk factors and 7-day corrective plan below.',
   },
+  'Bekijk hieronder jouw bewegingsanalyse. Je 7-daagse correctieplan met alle oefeningen staat klaar in de app.': {
+    en: 'See your movement analysis below. Your 7-day corrective plan with all exercises is ready in the app.',
+  },
   '— Max, 9toFit Bewegingsspecialist': { en: '— Max, 9toFit Movement Specialist' },
   // Pain email — stat labels + next-step CTA (waren hardcoded NL)
   'Programma': { en: 'Program' },
@@ -391,22 +394,17 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
     : result?.overall_risk?.toLowerCase() === 'low' || result?.overall_risk?.toLowerCase() === 'laag' ? '#44bb44'
     : '#ffaa00';
 
-  // Teaser i.p.v. het volledige plan: toon alleen dag + focus + aantal oefeningen.
-  // De volledige oefeningen (met video/sets/uitleg) staan in de app — zo openen
-  // mensen de app i.p.v. alles uit de mail te halen.
-  const planHtml = Array.isArray(result?.seven_day_plan)
-    ? result.seven_day_plan.map(day => `
-      <tr><td style="padding:0 0 8px;">
-        <table width="100%" cellpadding="0" cellspacing="0" style="background:#111318;border:1px solid #27272a;border-radius:6px;">
-          <tr><td style="padding:12px 16px;">
-            <span style="font-size:10px;color:#71717a;font-family:'Courier New',monospace;letter-spacing:2px;">${tt('DAG')} ${day.day || ''}</span>
-            <strong style="font-size:13px;color:#ffffff;margin-left:10px;">${day.title || ''}</strong>
-            ${day.focus ? `<span style="font-size:10px;color:#a1a1aa;margin-left:8px;font-family:'Courier New',monospace;">${day.focus}</span>` : ''}
-            ${Array.isArray(day.exercises) && day.exercises.length ? `<div style="font-size:11px;color:#71717a;font-family:'Courier New',monospace;margin-top:6px;">${day.exercises.length} ${tt('oefeningen')} · ${tt('in de app')}</div>` : ''}
-          </td></tr>
-        </table>
-      </td></tr>`).join('')
-    : '';
+  // GEEN plan-details in de klantmail — geen dagtitels, geen focus, geen
+  // oefeningen. Het plan leeft uitsluitend in de app (daar met video en
+  // uitleg per oefening); de mail toont alleen een afgeschermd teaser-blok
+  // met de aantallen. Zo is de app het enige plek waar je het plan ziet.
+  const planDays = Array.isArray(result?.seven_day_plan) ? result.seven_day_plan.length : 0;
+  const planExercises = Array.isArray(result?.seven_day_plan)
+    ? result.seven_day_plan.reduce((n, d) => n + (Array.isArray(d?.exercises) ? d.exercises.length : 0), 0)
+    : 0;
+  const planTeaserText = lang === 'en'
+    ? `Your full ${planDays || 7}-day corrective plan${planExercises ? ` — ${planExercises} exercises` : ''} — is ready in the 9toFit app, with a video, sets, reps and guidance for every exercise. Check your login email and start today.`
+    : `Je volledige ${planDays || 7}-daagse correctieplan${planExercises ? ` — ${planExercises} oefeningen` : ''} — staat klaar in de 9toFit-app, met per oefening een video, sets, herhalingen en uitleg. Check je inlogmail en start vandaag.`;
 
   const limitationsHtml = Array.isArray(result?.movement_limitations)
     ? result.movement_limitations.map(lim => `
@@ -451,7 +449,7 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
   </td></tr>
 
   <tr><td style="padding:0 0 24px 0;">
-    <div style="font-size:15px;color:#a1a1aa;line-height:1.8;max-width:460px;">${tt('Bekijk hieronder jouw bewegingsbeperkingen, risicofactoren en het 7-daagse correctieplan.')}</div>
+    <div style="font-size:15px;color:#a1a1aa;line-height:1.8;max-width:460px;">${tt('Bekijk hieronder jouw bewegingsanalyse. Je 7-daagse correctieplan met alle oefeningen staat klaar in de app.')}</div>
   </td></tr>
 
   <tr><td style="padding:0 0 2px 0;">
@@ -504,22 +502,12 @@ async function sendPainEmails({ name, email, result, answers, fromEmail, coachEm
     </table>
   </td></tr>` : ''}
 
-  ${planHtml ? `
-  <tr><td style="padding:16px 0 2px 0;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid #27272a;border-radius:8px;">
-      <tr><td style="padding:20px 24px 8px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#71717a;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:14px;">${tt('Je 7-Daags Correctieplan')}</div>
-        <table width="100%" cellpadding="0" cellspacing="0">${planHtml}</table>
-      </td></tr>
-    </table>
-  </td></tr>` : ''}
-
   <tr><td style="padding:24px 0 0 0;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#18181b;border:1px solid rgba(249,115,22,0.35);border-radius:8px;">
       <tr><td style="padding:24px;">
-        <div style="font-size:9px;letter-spacing:2px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">${tt('Jouw Volledige Plan')}</div>
+        <div style="font-size:9px;letter-spacing:2px;color:#f97316;text-transform:uppercase;font-family:'Courier New',monospace;margin-bottom:8px;">🔒 ${tt('Je 7-Daags Correctieplan')}</div>
         <div style="font-size:18px;font-weight:900;color:#ffffff;margin-bottom:8px;line-height:1.1;">${tt('Bekijk je oefeningen in de app')}</div>
-        <div style="font-size:13px;color:#a1a1aa;line-height:1.7;margin-bottom:16px;">${tt('Je volledige 7-daagse plan staat klaar in de 9toFit-app — met per oefening een video, sets, herhalingen en uitleg. Check de inlogmail om te starten.')}</div>
+        <div style="font-size:13px;color:#a1a1aa;line-height:1.7;margin-bottom:16px;">${planTeaserText}</div>
         <a href="${appUrl}" style="display:inline-block;background:#f97316;color:#ffffff;text-decoration:none;font-size:12px;font-weight:700;letter-spacing:2px;padding:12px 24px;text-transform:uppercase;border-radius:8px;">${tt('OPEN DE APP →')}</a>
       </td></tr>
     </table>
