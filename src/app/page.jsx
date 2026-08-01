@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useT, useLocale } from "../lib/i18n";
 import { trackLead, trackSchedule, getFbCookies, newEventId, hasConsent } from "../lib/metaPixel";
+import { trackScanStep, trackScanLead, trackScanComplete } from "../lib/scanTracking";
 
 const CALENDLY_URL =
   (typeof process !== "undefined" &&
@@ -538,6 +539,38 @@ const PAIN_FUNCTIONS = [
   { icon: "✅", label: "Deze gaan allemaal prima", id: "none", sub: "Geen beperking hierin" },
 ];
 
+// ── Namen van de stappen voor de afhaakmeting ──
+// Alleen deze namen gaan naar de bovenliggende pagina, nooit een antwoord.
+// Nieuwe vraag toegevoegd? Zet hem hier ook neer, anders komt hij als
+// "Pain onset"-achtige tekst in het overzicht (werkt, leest alleen slechter).
+const SCAN_STEP_LABELS = {
+  pain_location: "Pijnplek aanwijzen",
+  pain_timing: "Wanneer doet het pijn",
+  pain_intensity: "Pijnscore",
+  pain_duration: "Hoe lang al klachten",
+  pain_onset: "Hoe is het ontstaan",
+  pain_easers: "Wat verlicht het",
+  pain_triggers: "Wat lokt het uit",
+  pain_red_flags: "Alarmsignalen",
+  pain_function: "Wat lukt niet meer",
+  age: "Leeftijd",
+  training_background: "Trainingsachtergrond",
+  goals: "Doelen kiezen",
+  intent: "Wat zoek je",
+  work_situation: "Werksituatie",
+  work_hours: "Werkuren per week",
+  children: "Kinderen",
+  training_days: "Beschikbare trainingsdagen",
+  start_urgency: "Wanneer starten",
+  contact_naam: "Naam",
+  contact_email: "E-mailadres",
+  contact_telefoon: "Telefoonnummer",
+};
+
+// De contactvragen tellen mee als stap: daar valt in de praktijk het grootste
+// gat, en zonder deze drie stopt de trechter precies waar het spannend wordt.
+const GATE_KEYS = ["contact_naam", "contact_email", "contact_telefoon"];
+
 const ANALYZE_STEPS = [
   "Pijnpatroon data verwerken…",
   "Bewegingsbeperkingen in kaart brengen…",
@@ -839,6 +872,30 @@ export default function App() {
         ? ((totalSteps + gateStep + 1) / totalWithGate) * 100
         : ((step + 1) / totalWithGate) * 100
       : 0;
+
+  // ── Afhaakmeting: waar stopt de bezoeker? ─────────────────────────────
+  // Per bereikte stap één melding naar de bovenliggende 9toFit-pagina, die hem
+  // met het juiste bezoeker-id doorstuurt. Zie ../lib/scanTracking.js.
+  // Terugklikken telt niet dubbel; los geopend (geen iframe) gebeurt er niets.
+  useEffect(() => {
+    if (phase === "assessment" && currentStepId) {
+      trackScanStep(step, currentStepId, SCAN_STEP_LABELS[currentStepId], scanPath);
+    } else if (phase === "gate") {
+      const key = GATE_KEYS[gateStep] || "contact_naam";
+      trackScanStep(totalSteps + gateStep, key, SCAN_STEP_LABELS[key], scanPath);
+    }
+  }, [phase, step, gateStep, currentStepId, totalSteps, scanPath]);
+
+  // De contactgate zit VOOR de uitslag: wie hem voorbij komt is een lead, ook
+  // als de analyse daarna misgaat. Vandaar twee losse signalen.
+  useEffect(() => {
+    if (phase === "analyzing" || phase === "safety" || phase === "success" || phase === "result") {
+      trackScanLead(scanPath);
+    }
+    if (phase === "result" || phase === "success") {
+      trackScanComplete(scanPath);
+    }
+  }, [phase, scanPath]);
 
   // ── Navigation ──
   const canProceed = () => {
