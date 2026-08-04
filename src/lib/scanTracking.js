@@ -84,13 +84,26 @@ export function trackScanLead(path) {
   } catch { /* stil */ }
 }
 
-/** De uitslag staat op het scherm. */
-export function trackScanComplete(path) {
+/**
+ * Het eindscherm staat er.
+ *
+ * Twee afloopen tellen allebei als afgerond: de gewone uitslag, en het
+ * 'plan eerst een gesprek'-scherm bij alarmsignalen. Die laatste groep krijgt
+ * bewust geen AI-uitslag te zien, maar het is wel een volledig afgeronde en
+ * vaak hoogwaardige lead. Zonder deze meting zou het overzicht structureel
+ * melden dat mensen afhaken tussen contact en uitslag, en zou je een scherm
+ * gaan optimaliseren dat die groep nooit te zien krijgt.
+ */
+export function trackScanComplete(path, outcome) {
   try {
     if (completed) return
     completed = true
+    const params = {}
     const p = clean(path)
-    post('scan_complete', p ? { scan_path: p } : {})
+    if (p) params.scan_path = p
+    const o = clean(outcome)
+    if (o) params.outcome = o
+    post('scan_complete', params)
   } catch { /* stil */ }
 }
 

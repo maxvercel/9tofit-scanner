@@ -878,7 +878,11 @@ export default function App() {
   // met het juiste bezoeker-id doorstuurt. Zie ../lib/scanTracking.js.
   // Terugklikken telt niet dubbel; los geopend (geen iframe) gebeurt er niets.
   useEffect(() => {
-    if (phase === "assessment" && currentStepId) {
+    if (phase === "landing") {
+      trackScanStep(-2, "landing", "Introscherm gezien", scanPath);
+    } else if (phase === "path_select") {
+      trackScanStep(-1, "path_select", "Padkeuze in beeld", scanPath);
+    } else if (phase === "assessment" && currentStepId) {
       trackScanStep(step, currentStepId, SCAN_STEP_LABELS[currentStepId], scanPath);
     } else if (phase === "gate") {
       const key = GATE_KEYS[gateStep] || "contact_naam";
@@ -889,11 +893,19 @@ export default function App() {
   // De contactgate zit VOOR de uitslag: wie hem voorbij komt is een lead, ook
   // als de analyse daarna misgaat. Vandaar twee losse signalen.
   useEffect(() => {
-    if (phase === "analyzing" || phase === "safety" || phase === "success" || phase === "result") {
+    // 'analyzing' telt bewust NIET mee: daar is nog niets opgeslagen. Faalt de
+    // analyse, dan gaat de bezoeker terug naar de gate en is er geen lead —
+    // terwijl het dashboard er anders wel een zou tellen.
+    if (phase === "safety" || phase === "success" || phase === "result") {
       trackScanLead(scanPath);
     }
+    // Alarmsignalen krijgen geen AI-uitslag maar het 'plan eerst een gesprek'-
+    // scherm. Dat is hun eindpunt en vaak de beste lead die er is; die hoort
+    // dus als afgerond te tellen, met vermelding van de afloop.
     if (phase === "result" || phase === "success") {
-      trackScanComplete(scanPath);
+      trackScanComplete(scanPath, "uitslag");
+    } else if (phase === "safety") {
+      trackScanComplete(scanPath, "alarmsignaal");
     }
   }, [phase, scanPath]);
 
